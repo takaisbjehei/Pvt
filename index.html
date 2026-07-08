@@ -107,7 +107,7 @@ body::before {
   animation: slideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (orientation: landscape) {
   /* On desktop, keep standard transitions */
   #chatScreen.active, #publicProfileScreen.active, #spyChatScreen.active, #ownerScreen.active, #createScreen.active {
     animation: screenIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -422,11 +422,13 @@ body::before {
 .msg-row.user { align-items: flex-end; margin: 3px 0; }
 .msg-row.ai { align-items: flex-start; margin: 6px 0; }
 
-@keyframes bubbleIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.94); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes jellyBounce {
+  0% { transform: scale(0.88) translateY(12px); opacity: 0; }
+  45% { transform: scale(1.04) translateY(-3px); }
+  70% { transform: scale(0.98) translateY(1px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }
-.msg-row { animation: bubbleIn 0.25s cubic-bezier(0.175,0.885,0.32,1.275); }
+.msg-row { animation: jellyBounce 0.42s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 
 .ai-inner { display: flex; align-items: flex-end; gap: 8px; max-width: 88%; }
 .sm-av {
@@ -712,7 +714,7 @@ textarea::placeholder { color: var(--text3); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---- DESKTOP ---- */
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (orientation: landscape) {
   .app-container {
     width: 95vw;
     max-width: 1200px;
@@ -807,6 +809,16 @@ textarea::placeholder { color: var(--text3); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-weight: 400;
   line-height: 1.4;
+}
+
+/* ---- SPARK PARTICLES ---- */
+.spark-particle {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-light) 30%, var(--accent) 100%);
+  box-shadow: 0 0 10px var(--accent-glow);
+  pointer-events: none;
+  z-index: 9999;
 }
 </style>
 </head>
@@ -1807,6 +1819,11 @@ function addBubble(role, content, animate=true, msgId=null, isRead=false) {
 
   container.appendChild(msgRow);
   if (animate) scrollToBottom();
+
+  // Haptic feedback on receiving DMs or AI messages
+  if (role !== 'user') {
+    triggerHaptic([15, 50, 15]);
+  }
 }
 
 function showTypingBubble() {
@@ -1860,6 +1877,14 @@ async function sendMsg() {
   const input = document.getElementById('msgInput');
   const val = input.value.trim();
   if (!val || loading) return;
+  
+  // Trigger feedback sparks and haptics instantly
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) {
+    spawnSendParticles(sendBtn);
+  }
+  triggerHaptic([10]);
+
   input.value = '';
   input.style.height = '22px';
   document.getElementById('sendBtn').disabled = true;
@@ -2362,6 +2387,61 @@ async function showSpyLogs(userA, userB) {
   } catch(e) {
     msgsContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading logs.</div>`;
   }
+}
+
+// ========== HAPTIC & PARTICLE FX HELPERS ==========
+function triggerHaptic(pattern = [10]) {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(pattern); } catch(e) {}
+  }
+}
+
+function spawnSendParticles(btnEl) {
+  try {
+    const rect = btnEl.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'spark-particle';
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.8 + Math.random() * 2.8;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+
+      p.style.left = `${centerX}px`;
+      p.style.top = `${centerY}px`;
+
+      const size = 5 + Math.random() * 5;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+
+      document.body.appendChild(p);
+
+      let x = centerX;
+      let y = centerY;
+      let opacity = 1;
+
+      function update() {
+        x += vx;
+        y += vy;
+        opacity -= 0.04;
+
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        p.style.opacity = opacity;
+
+        if (opacity > 0) {
+          requestAnimationFrame(update);
+        } else {
+          p.remove();
+        }
+      }
+      requestAnimationFrame(update);
+    }
+  } catch(e) {}
 }
 
 // ========== BOOT ==========
