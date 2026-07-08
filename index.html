@@ -716,8 +716,8 @@ textarea::placeholder { color: var(--text3); }
     <div class="sel-title">Chats</div>
   </div>
   <div class="tab-toggle">
-    <div id="tabChatsAI" class="type-tab active" onclick="switchChatsTab('ai')">🤖 AI</div>
-    <div id="tabChatsHuman" class="type-tab" onclick="switchChatsTab('human')">👥 People</div>
+    <div id="tabChatsAI" class="type-tab active" onclick="switchChatsTab('ai')">AI Chats</div>
+    <div id="tabChatsHuman" class="type-tab" onclick="switchChatsTab('human')">People</div>
   </div>
   <div class="chars-list" id="activeChatsList"></div>
 </div>
@@ -726,14 +726,17 @@ textarea::placeholder { color: var(--text3); }
 <div class="screen" id="exploreScreen">
   <div class="sel-header">
     <div class="sel-title">Explore</div>
+    <div style="cursor:pointer;padding:6px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center" onclick="goCreate()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
   </div>
   <div class="searchbar">
-    <span style="color:var(--text3);font-size:16px">🔍</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="searchInput" type="text" placeholder="Search characters or users..." oninput="filterExplore(this.value)"/>
   </div>
   <div class="tab-toggle">
-    <div id="tabExplAI" class="type-tab active" onclick="switchExplTab('ai')">AI Characters</div>
-    <div id="tabExplHuman" class="type-tab" onclick="switchExplTab('human')">Real People</div>
+    <div id="tabExplAI" class="type-tab active" onclick="switchExplTab('ai')">Characters</div>
+    <div id="tabExplHuman" class="type-tab" onclick="switchExplTab('human')">People</div>
   </div>
   <div class="chars-list" id="exploreListContainer"></div>
 </div>
@@ -742,7 +745,7 @@ textarea::placeholder { color: var(--text3); }
 <div class="screen" id="profileScreen">
   <div class="chars-list" style="padding-bottom:20px;">
     <div class="prof-hero">
-      <div id="profSelfAv" class="prof-av" onclick="handleSecretClick()">👤</div>
+      <div id="profSelfAv" class="prof-av" onclick="handleSecretClick()"></div>
       <div id="profDisplay" class="prof-username">@guest</div>
     </div>
     <div style="padding: 0 20px; display:flex; flex-direction:column; gap:20px;">
@@ -772,7 +775,7 @@ textarea::placeholder { color: var(--text3); }
   <div class="chat-header">
     <div class="back-btn" onclick="navBack('chats')">‹</div>
     <div class="av-wrap">
-      <div class="h-av" id="hAv" onclick="openPublicProfile(cur.type, cur.id)">🤖</div>
+      <div class="h-av" id="hAv" onclick="openPublicProfile(cur.type, cur.id)"></div>
       <div class="online-dot" id="onlineDot"></div>
     </div>
     <div class="h-name" id="hName" onclick="openPublicProfile(cur.type, cur.id)">Character</div>
@@ -804,12 +807,12 @@ textarea::placeholder { color: var(--text3); }
       <input class="f-input" id="cName" placeholder="e.g. Gym Goth Girl" type="text"/>
     </div>
     <div style="display:flex; gap:14px; align-items:flex-start;">
-      <div id="cAvatarPreview" style="width:68px;height:68px;border-radius:16px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;border:1.5px solid var(--border2)">🤖</div>
+      <div id="cAvatarPreview" style="width:68px;height:68px;border-radius:16px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid var(--border2)"></div>
       <div style="flex:1;">
         <div class="f-label">Image (Optional)</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           <button class="pub-btn secondary" style="padding:10px;font-size:13px;" onclick="document.getElementById('cFile').click()">🖼️ Upload</button>
-          <input class="f-input" id="cAvatarUrl" placeholder="Or paste URL..." type="text" style="font-size:13px;" oninput="document.getElementById('cAvatarPreview').innerHTML = this.value ? '<img src=\x22'+this.value+'\x22 style=\x22width:100%;height:100%;object-fit:cover\x22/>' : '🤖'"/>
+          <input class="f-input" id="cAvatarUrl" placeholder="Or paste URL..." type="text" style="font-size:13px;" oninput="document.getElementById('cAvatarPreview').innerHTML = this.value ? '<img src=\x22'+this.value+'\x22 style=\x22width:100%;height:100%;object-fit:cover\x22/>' : IC_BOT"/>
         </div>
         <input type="file" id="cFile" accept="image/*" style="display:none" onchange="handleFileUpload(this,'cAvatarUrl','cAvatarPreview')">
       </div>
@@ -888,7 +891,9 @@ textarea::placeholder { color: var(--text3); }
 <!-- SECURITY/WELCOME OVERLAYS -->
 <div id="pwdModal" class="pwd-ov">
   <div class="pwd-card">
-    <div class="pwd-logo">🔐</div>
+    <div class="pwd-logo" style="display:flex;justify-content:center">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
     <div class="pwd-title">Verify Access</div>
     <div class="pwd-sub">Enter the owner authorization code.</div>
     <input class="f-input" id="pwdInput" type="password" placeholder="Enter key..." style="text-align:center;" onkeydown="if(event.key==='Enter')submitPassword()"/>
@@ -901,7 +906,9 @@ textarea::placeholder { color: var(--text3); }
 
 <div id="welcomeOverlay" class="pwd-ov" style="display:none;">
   <div class="pwd-card">
-    <div class="pwd-logo">✨</div>
+    <div class="pwd-logo" style="display:flex;justify-content:center">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
     <div class="pwd-title">Welcome to Chai</div>
     <div class="pwd-sub">Choose a username to start chatting with AI characters and real people.</div>
     <input class="f-input" id="welcomeUsernameInput" type="text" placeholder="e.g. user_123" style="text-align:center;" onkeydown="if(event.key==='Enter')initializeUser()"/>
@@ -913,9 +920,18 @@ textarea::placeholder { color: var(--text3); }
 
   <!-- GLOBAL BOTTOM NAV -->
   <div id="globalNav" class="bot-nav">
-    <div id="nav-chats" class="nav-it active" onclick="goTab('chats')"><div class="nav-ic">💬</div><span>Chats</span></div>
-    <div id="nav-explore" class="nav-it" onclick="goTab('explore')"><div class="nav-ic">🔮</div><span>Explore</span></div>
-    <div id="nav-profile" class="nav-it" onclick="goTab('profile')"><div class="nav-ic">👤</div><span>Profile</span></div>
+    <div id="nav-chats" class="nav-it active" onclick="goTab('chats')">
+      <div class="nav-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <span>Chats</span>
+    </div>
+    <div id="nav-explore" class="nav-it" onclick="goTab('explore')">
+      <div class="nav-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+      <span>Explore</span>
+    </div>
+    <div id="nav-profile" class="nav-it" onclick="goTab('profile')">
+      <div class="nav-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <span>Profile</span>
+    </div>
   </div>
 </div> <!-- appContainer -->
 
@@ -956,6 +972,12 @@ let isTyping = false;
 let typingTimeout = null;
 // activeHumans is now derived from DB, kept in memory only
 let activeHumans = [];
+
+// SVG icon constants — no more emoji
+const IC_BOT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4"/><path d="M8 7h8"/></svg>';
+const IC_USER = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+const IC_BOT_SM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4"/><path d="M8 7h8"/></svg>';
+const IC_USER_SM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
 // ========== UTILITIES ==========
 function esc(str) {
@@ -1169,7 +1191,7 @@ function createCharRow(charData, onClickFn) {
   const unreadHtml = charData.unread > 0 ? `<div class="unread-dot">${charData.unread}</div>` : '';
   const avImg = charData.avatar_url
     ? `<img src="${esc(charData.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-    : (charData.emoji || (isHuman ? '👤' : '🤖'));
+    : (isHuman ? IC_USER : IC_BOT);
 
   const wrap = document.createElement('div');
   wrap.className = 'char-wrap';
@@ -1238,7 +1260,7 @@ async function renderChatsList() {
       return;
     }
     activeHumans.forEach(h => {
-      const hd = { id: h.id, name: h.id, type: 'human', emoji: '👤', avatar_url: h.avatar_url, preview: h.preview || 'Tap to chat', unread: h.unread };
+      const hd = { id: h.id, name: h.id, type: 'human', emoji: null, avatar_url: h.avatar_url, preview: h.preview || 'Tap to chat', unread: h.unread };
       c.appendChild(createCharRow(hd, () => openExistChat('human', h.id)));
     });
   }
@@ -1249,15 +1271,28 @@ function renderExploreList() {
   c.innerHTML = '';
 
   if (exploreTabActive === 'ai') {
-    // Create bar
-    const createBar = document.createElement('div');
-    createBar.className = 'create-bar';
-    createBar.innerHTML = `<div class="create-icon">✦</div><div><div style="font-size:15px;font-weight:700">Create a character</div><div style="font-size:13px;color:var(--text2);margin-top:2px">Build your own AI persona</div></div>`;
-    createBar.onclick = goCreate;
-    c.appendChild(createBar);
+    // Create bar — built inline in innerHTML so it doesn't get nuked
+    const createBarHtml = `
+      <div class="create-bar" id="createBarBtn">
+        <div class="create-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700">Create a character</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px">Design your own AI persona</div>
+        </div>
+      </div>`;
 
     if (chars.length === 0) {
-      c.innerHTML += `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">No AI characters yet. Create one!</div>`;
+      c.innerHTML = createBarHtml + `
+        <div style="text-align:center;padding:60px 24px;color:var(--text3)">
+          <div style="font-size:36px;margin-bottom:14px;opacity:0.4">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text2)">No characters yet</div>
+          <div style="font-size:13px;line-height:1.5">Create your first AI character to start chatting.</div>
+        </div>`;
+      document.getElementById('createBarBtn').addEventListener('click', goCreate);
       return;
     }
 
@@ -1269,22 +1304,26 @@ function renderExploreList() {
       card.className = 'char-card';
       const avContent = char.avatar_url
         ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
-        : (char.emoji || '🤖');
+        : `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
       card.innerHTML = `
         <div class="char-card-img">${avContent}</div>
         <div class="char-card-info">
           <div class="char-card-name">${esc(char.name)}</div>
-          <div class="char-card-prev">${esc(char.persona || '')}</div>
+          <div class="char-card-prev">${esc(char.persona || 'Tap to chat')}</div>
         </div>`;
       card.onclick = () => openExistChat('ai', char.id);
       grid.appendChild(card);
     });
+
+    // Insert createBar HTML first, then append the grid
+    c.innerHTML = createBarHtml;
+    document.getElementById('createBarBtn').addEventListener('click', goCreate);
     c.appendChild(grid);
   } else {
     c.innerHTML = `
       <div style="display:flex;gap:8px;padding:0 16px 14px;">
-        <button class="cr-btn" style="font-size:13px;padding:12px;margin-top:0;" onclick="fetchExpUsers('active')">🟢 Recent</button>
-        <button class="pub-btn secondary" style="font-size:13px;" onclick="fetchExpUsers('all')">Search All</button>
+        <button class="cr-btn" style="font-size:13px;padding:12px;margin-top:0;" onclick="fetchExpUsers('active')">Recent</button>
+        <button class="pub-btn secondary" style="font-size:13px;" onclick="fetchExpUsers('all')">All Users</button>
       </div>
       <div id="expHumanRes"></div>`;
     fetchExpUsers('active');
@@ -1304,7 +1343,7 @@ window.fetchExpUsers = async function(mode) {
     data.forEach(u => {
       if (u.username === myUsername) return;
       count++;
-      const hd = { id: u.username, name: u.username, type: 'human', emoji: '👤', avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
+      const hd = { id: u.username, name: u.username, type: 'human', emoji: null, avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
       c.appendChild(createCharRow(hd, () => openExistChat('human', u.username)));
     });
     if (count === 0) c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">You're the only one here!</div>`;
@@ -1334,7 +1373,7 @@ function filterExplore(q) {
       if (!error && data.length > 0) {
         data.forEach(u => {
           if (u.username === myUsername) return;
-          const hd = { id: u.username, name: u.username, type: 'human', emoji: '👤', avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
+          const hd = { id: u.username, name: u.username, type: 'human', emoji: null, avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
           c.appendChild(createCharRow(hd, () => openExistChat('human', u.username)));
         });
       } else {
@@ -1377,7 +1416,7 @@ async function openExistChat(type, targetId) {
         }
       } catch(e) {}
     }
-    goChat({ id: targetId, name: targetId, type: 'human', emoji: '👤', avatar_url: pfpUrl });
+    goChat({ id: targetId, name: targetId, type: 'human', avatar_url: pfpUrl });
   }
 }
 
@@ -1390,7 +1429,7 @@ async function goChat(charObj, skipHistory=false) {
 
   const avNode = cur.avatar_url
     ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-    : (cur.emoji || (cur.type === 'human' ? '👤' : '🤖'));
+    : (cur.type === 'human' ? IC_USER : IC_BOT);
   document.getElementById('hName').textContent = cur.name;
   document.getElementById('hAv').innerHTML = avNode;
   document.getElementById('sendBtn').disabled = true;
@@ -1532,7 +1571,7 @@ function addBubble(role, content, animate=true, msgId=null, isRead=false) {
   } else {
     const avNode = cur && cur.avatar_url
       ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-      : (cur && cur.emoji ? cur.emoji : '🤖');
+      : IC_BOT_SM;
     msgRow.innerHTML = `
       <div class="ai-inner">
         <div class="sm-av">${avNode}</div>
@@ -1552,7 +1591,7 @@ function showTypingBubble() {
   msgRow.className = 'msg-row ai';
   const avNode = cur && cur.avatar_url
     ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-    : (cur && cur.emoji ? cur.emoji : '🤖');
+    : IC_BOT_SM;
   msgRow.innerHTML = `
     <div class="ai-inner">
       <div class="sm-av">${avNode}</div>
@@ -1726,7 +1765,7 @@ async function openPublicProfile(type, id) {
   const editBtn = document.getElementById('pubEditBtn');
 
   coverEl.src = '';
-  avWrap.innerHTML = '👤';
+  avWrap.innerHTML = IC_USER;
   editBtn.style.display = 'none';
   bioEl.textContent = 'Loading...';
 
@@ -1739,7 +1778,7 @@ async function openPublicProfile(type, id) {
         avWrap.innerHTML = `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`;
         coverEl.src = char.avatar_url;
       } else {
-        avWrap.innerHTML = char.emoji || '🤖';
+        avWrap.innerHTML = IC_BOT;
       }
       if (char.created_by === myUsername) {
         editBtn.style.display = 'flex';
@@ -1774,7 +1813,7 @@ function goCreate() {
   editingId = null;
   document.getElementById('cName').value = '';
   document.getElementById('cAvatarUrl').value = '';
-  document.getElementById('cAvatarPreview').innerHTML = '🤖';
+  document.getElementById('cAvatarPreview').innerHTML = IC_BOT;
   document.getElementById('cOpener').value = '';
   document.getElementById('cPersona').value = '';
   document.getElementById('cModel').value = 'llama-3.3-70b-versatile';
@@ -1788,7 +1827,7 @@ function editCurrentChar() {
   document.getElementById('cAvatarUrl').value = cur.avatar_url || '';
   document.getElementById('cAvatarPreview').innerHTML = cur.avatar_url
     ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-    : '🤖';
+    : IC_BOT;
   document.getElementById('cOpener').value = cur.opener || '';
   document.getElementById('cPersona').value = cur.persona || '';
   document.getElementById('cModel').value = cur.model || 'llama-3.3-70b-versatile';
@@ -1893,7 +1932,7 @@ async function renderSpyList() {
           wrap.className = 'char-wrap';
           wrap.innerHTML = `
             <div class="char-row">
-              <div class="char-av">${u.avatar_url ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : '👤'}</div>
+              <div class="char-av">${u.avatar_url ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : IC_USER}</div>
               <div class="char-info">
                 <div class="char-name">@${esc(u.username)}</div>
                 <div class="char-prev">${esc(u.bio || 'No bio.')}</div>
@@ -1914,7 +1953,7 @@ async function renderSpyList() {
         wrap.className = 'char-wrap';
         wrap.innerHTML = `
           <div class="char-row">
-            <div class="char-av">${c.avatar_url ? `<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : '🤖'}</div>
+            <div class="char-av">${c.avatar_url ? `<img src="${esc(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>` : IC_BOT}</div>
             <div class="char-info">
               <div class="char-name">${esc(c.name)}</div>
               <div class="char-prev">${esc(c.persona || '')}</div>
@@ -1950,7 +1989,7 @@ async function viewUserConversations(username) {
     wrap.className = 'char-wrap';
     wrap.innerHTML = `
       <div class="char-row">
-        <div class="char-av">${isAi ? '🤖' : '👤'}</div>
+        <div class="char-av">${isAi ? IC_BOT : IC_USER}</div>
         <div class="char-info">
           <div class="char-name">${esc(partner)}</div>
           <div class="char-prev">Tap to view logs</div>
@@ -1980,7 +2019,7 @@ async function viewAiConversations(charId, charName) {
     wrap.className = 'char-wrap';
     wrap.innerHTML = `
       <div class="char-row">
-        <div class="char-av">👤</div>
+        <div class="char-av">${IC_USER}</div>
         <div class="char-info">
           <div class="char-name">@${esc(user)}</div>
           <div class="char-prev">Tap to view logs</div>
