@@ -752,6 +752,57 @@ textarea::placeholder { color: var(--text3); }
 .spy-stat-icon { font-size: 22px; }
 .spy-stat-label { font-size: 13px; color: var(--text2); font-weight: 600; }
 .spy-stat-val { font-size: 18px; font-weight: 900; color: var(--accent-light); margin-left: auto; }
+
+/* ---- FULL-WIDTH CHAT LIST CARD ROW ---- */
+.chat-row-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(145deg, rgba(20, 20, 30, 0.6) 0%, rgba(10, 10, 15, 0.7) 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  margin: 0 16px 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(20px);
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.chat-row-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 16px rgba(139, 92, 246, 0.1);
+}
+.chat-row-card:active {
+  transform: scale(0.98);
+}
+.chat-row-av {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-row-info {
+  flex: 1;
+  min-width: 0;
+}
+.chat-row-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.chat-row-prev {
+  font-size: 13px;
+  color: var(--text2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 400;
+}
 </style>
 </head>
 <body>
@@ -1305,8 +1356,8 @@ async function renderChatsList() {
   const c = document.getElementById('activeChatsList');
   c.innerHTML = '';
 
-  const grid = document.createElement('div');
-  grid.className = 'char-grid';
+  const wrapDiv = document.createElement('div');
+  wrapDiv.style.paddingTop = '8px';
 
   if (chatsTabActive === 'ai') {
     // Fetch all AI conversations this user has from messages table
@@ -1340,20 +1391,20 @@ async function renderChatsList() {
       }
       aiChats.forEach(({ char, preview }) => {
         const card = document.createElement('div');
-        card.className = 'char-card';
+        card.className = 'chat-row-card';
         const avContent = char.avatar_url
-          ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
-          : IC_BOT_LG;
+          ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
+          : IC_BOT;
         card.innerHTML = `
-          <div class="char-card-img">${avContent}</div>
-          <div class="char-card-info">
-            <div class="char-card-name">${esc(char.name)}</div>
-            <div class="char-card-prev">${esc(preview || 'Tap to chat')}</div>
+          <div class="chat-row-av">${avContent}</div>
+          <div class="chat-row-info">
+            <div class="chat-row-name">${esc(char.name)}</div>
+            <div class="chat-row-prev">${esc(preview || 'Tap to chat')}</div>
           </div>`;
         card.onclick = () => openExistChat('ai', char.id);
-        grid.appendChild(card);
+        wrapDiv.appendChild(card);
       });
-      c.appendChild(grid);
+      c.appendChild(wrapDiv);
     } catch(e) {
       c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading chats.</div>`;
     }
@@ -1364,22 +1415,22 @@ async function renderChatsList() {
     }
     activeHumans.forEach(h => {
       const card = document.createElement('div');
-      card.className = 'char-card';
+      card.className = 'chat-row-card';
       const avContent = h.avatar_url
-        ? `<img src="${esc(h.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
-        : IC_USER_LG;
-      const unreadHtml = h.unread > 0 ? `<div class="unread-dot" style="position:absolute;top:10px;right:10px;z-index:5">${h.unread}</div>` : '';
+        ? `<img src="${esc(h.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
+        : IC_USER;
+      const unreadHtml = h.unread > 0 ? `<div class="unread-dot" style="margin-left: auto;">${h.unread}</div>` : '';
       card.innerHTML = `
-        ${unreadHtml}
-        <div class="char-card-img">${avContent}</div>
-        <div class="char-card-info">
-          <div class="char-card-name">@${esc(h.id)}</div>
-          <div class="char-card-prev">${esc(h.preview || 'Tap to chat')}</div>
-        </div>`;
+        <div class="chat-row-av">${avContent}</div>
+        <div class="chat-row-info">
+          <div class="chat-row-name">@${esc(h.id)}</div>
+          <div class="chat-row-prev">${esc(h.preview || 'Tap to chat')}</div>
+        </div>
+        ${unreadHtml}`;
       card.onclick = () => openExistChat('human', h.id);
-      grid.appendChild(card);
+      wrapDiv.appendChild(card);
     });
-    c.appendChild(grid);
+    c.appendChild(wrapDiv);
   }
 }
 
@@ -1734,7 +1785,7 @@ function addBubble(role, content, animate=true, msgId=null, isRead=false) {
   } else {
     const avNode = cur && cur.avatar_url
       ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
-      : IC_BOT_SM;
+      : (cur && cur.type === 'human' ? IC_USER_SM : IC_BOT_SM);
     msgRow.innerHTML = `
       <div class="ai-inner">
         <div class="sm-av">${avNode}</div>
@@ -2303,6 +2354,62 @@ async function showSpyLogs(userA, userB) {
 
 // ========== BOOT ==========
 checkUserOnBoot();
+
+// ========== SWIPE GESTURES FOR MOBILE NAVIGATION ==========
+let touchStartX = 0;
+let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
+
+const mainTabsOrder = ['chats', 'explore', 'profile'];
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].clientX;
+  touchStartY = e.changedTouches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  touchEndX = e.changedTouches[0].clientX;
+  touchEndY = e.changedTouches[0].clientY;
+  handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+
+  // Horizontal swipe check, filter out vertical scrolls
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 68) {
+    const activeScreen = document.querySelector('.screen.active');
+    
+    // Left-edge Swipe Back Gesture (Right swipe from left side of screen)
+    if (activeScreen && (activeScreen.id === 'chatScreen' || activeScreen.id === 'publicProfileScreen' || activeScreen.id === 'createScreen')) {
+      if (diffX > 0 && touchStartX < 70) {
+        navBack();
+      }
+      return;
+    }
+
+    // Tab switcher swipes (only works on main screens)
+    if (activeScreen && (activeScreen.id === 'chatsScreen' || activeScreen.id === 'exploreScreen' || activeScreen.id === 'profileScreen')) {
+      const currentTab = history.state && history.state.screen ? history.state.screen.replace('Screen', '') : 'chats';
+      const currentIndex = mainTabsOrder.indexOf(currentTab);
+      if (currentIndex === -1) return;
+
+      if (diffX < 0) {
+        // Swipe Left -> Go to next tab
+        if (currentIndex < mainTabsOrder.length - 1) {
+          goTab(mainTabsOrder[currentIndex + 1]);
+        }
+      } else {
+        // Swipe Right -> Go to previous tab
+        if (currentIndex > 0) {
+          goTab(mainTabsOrder[currentIndex - 1]);
+        }
+      }
+    }
+  }
+}
 </script>
 </body>
 </html>
