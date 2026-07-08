@@ -1475,6 +1475,13 @@ async function openExistChat(type, targetId) {
 async function goChat(charObj, skipHistory=false) {
   if (!skipHistory) history.pushState({ screen: 'chatScreen' }, '', '#chat');
   cur = charObj;
+  
+  // Clean up any existing realtime connection immediately to prevent duplicates
+  if (realtimeSub) {
+    try { supabaseClient.removeChannel(realtimeSub); } catch(e) {}
+    realtimeSub = null;
+  }
+  
   hideAllScreens();
   document.getElementById('chatScreen').classList.add('active');
 
@@ -1754,7 +1761,25 @@ async function callAiRoleplay() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let reply = '';
+    let displayedReply = '';
     let buffer = '';
+    let isTypingActive = true;
+
+    // Typewriter effect catching up smoothly character by character
+    function typeNextChar() {
+      if (displayedReply.length < reply.length) {
+        displayedReply += reply[displayedReply.length];
+        bubbleEl.innerHTML = formatMessageContent(displayedReply);
+        scrollToBottom();
+        setTimeout(typeNextChar, 10); // 10ms delay gives a very satisfying, smooth typewriter speed
+      } else if (isTypingActive) {
+        setTimeout(typeNextChar, 30);
+      } else {
+        bubbleEl.innerHTML = formatMessageContent(reply);
+        scrollToBottom();
+      }
+    }
+    typeNextChar();
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1773,13 +1798,12 @@ async function callAiRoleplay() {
             const delta = parsed.choices[0].delta.content;
             if (delta) {
               reply += delta;
-              bubbleEl.innerHTML = formatMessageContent(reply);
-              scrollToBottom();
             }
           } catch(e) {}
         }
       }
     }
+    isTypingActive = false;
 
     cur.msgs.push({ id: replyId, role: 'assistant', content: reply });
 
