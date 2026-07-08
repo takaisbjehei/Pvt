@@ -1018,6 +1018,8 @@ const IC_BOT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stro
 const IC_USER = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 const IC_BOT_SM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4"/><path d="M8 7h8"/></svg>';
 const IC_USER_SM = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+const IC_BOT_LG = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4"/><path d="M8 7h8"/></svg>';
+const IC_USER_LG = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
 // ========== UTILITIES ==========
 function toggleFullscreen() {
@@ -1265,6 +1267,9 @@ async function renderChatsList() {
   const c = document.getElementById('activeChatsList');
   c.innerHTML = '';
 
+  const grid = document.createElement('div');
+  grid.className = 'char-grid';
+
   if (chatsTabActive === 'ai') {
     // Fetch all AI conversations this user has from messages table
     const charIds = chars.map(ch => ch.id);
@@ -1296,9 +1301,21 @@ async function renderChatsList() {
         return;
       }
       aiChats.forEach(({ char, preview }) => {
-        const cd = { ...char, preview, type: 'ai' };
-        c.appendChild(createCharRow(cd, () => openExistChat('ai', char.id)));
+        const card = document.createElement('div');
+        card.className = 'char-card';
+        const avContent = char.avatar_url
+          ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+          : IC_BOT_LG;
+        card.innerHTML = `
+          <div class="char-card-img">${avContent}</div>
+          <div class="char-card-info">
+            <div class="char-card-name">${esc(char.name)}</div>
+            <div class="char-card-prev">${esc(preview || 'Tap to chat')}</div>
+          </div>`;
+        card.onclick = () => openExistChat('ai', char.id);
+        grid.appendChild(card);
       });
+      c.appendChild(grid);
     } catch(e) {
       c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading chats.</div>`;
     }
@@ -1308,9 +1325,23 @@ async function renderChatsList() {
       return;
     }
     activeHumans.forEach(h => {
-      const hd = { id: h.id, name: h.id, type: 'human', emoji: null, avatar_url: h.avatar_url, preview: h.preview || 'Tap to chat', unread: h.unread };
-      c.appendChild(createCharRow(hd, () => openExistChat('human', h.id)));
+      const card = document.createElement('div');
+      card.className = 'char-card';
+      const avContent = h.avatar_url
+        ? `<img src="${esc(h.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+        : IC_USER_LG;
+      const unreadHtml = h.unread > 0 ? `<div class="unread-dot" style="position:absolute;top:10px;right:10px;z-index:5">${h.unread}</div>` : '';
+      card.innerHTML = `
+        ${unreadHtml}
+        <div class="char-card-img">${avContent}</div>
+        <div class="char-card-info">
+          <div class="char-card-name">@${esc(h.id)}</div>
+          <div class="char-card-prev">${esc(h.preview || 'Tap to chat')}</div>
+        </div>`;
+      card.onclick = () => openExistChat('human', h.id);
+      grid.appendChild(card);
     });
+    c.appendChild(grid);
   }
 }
 
@@ -1390,14 +1421,34 @@ window.fetchExpUsers = async function(mode) {
     const { data, error } = await supabaseClient.from('users').select('username, avatar_url, bio').order('created_at', { ascending: false }).limit(limit);
     c.innerHTML = '';
     if (error) throw error;
+    
+    const grid = document.createElement('div');
+    grid.className = 'char-grid';
     let count = 0;
+    
     data.forEach(u => {
       if (u.username === myUsername) return;
       count++;
-      const hd = { id: u.username, name: u.username, type: 'human', emoji: null, avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
-      c.appendChild(createCharRow(hd, () => openExistChat('human', u.username)));
+      const card = document.createElement('div');
+      card.className = 'char-card';
+      const avContent = u.avatar_url
+        ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+        : IC_USER_LG;
+      card.innerHTML = `
+        <div class="char-card-img">${avContent}</div>
+        <div class="char-card-info">
+          <div class="char-card-name">@${esc(u.username)}</div>
+          <div class="char-card-prev">${esc(u.bio || 'Tap to chat')}</div>
+        </div>`;
+      card.onclick = () => openExistChat('human', u.username);
+      grid.appendChild(card);
     });
-    if (count === 0) c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">You're the only one here!</div>`;
+    
+    if (count === 0) {
+      c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">You're the only one here!</div>`;
+    } else {
+      c.appendChild(grid);
+    }
   } catch(err) {
     c.innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">Error: ${esc(err.message)}</div>`;
   }
@@ -1422,11 +1473,25 @@ function filterExplore(q) {
       const { data, error } = await supabaseClient.from('users').select('username, avatar_url, bio').ilike('username', `%${normQ}%`).limit(10);
       c.innerHTML = '';
       if (!error && data.length > 0) {
+        const grid = document.createElement('div');
+        grid.className = 'char-grid';
         data.forEach(u => {
           if (u.username === myUsername) return;
-          const hd = { id: u.username, name: u.username, type: 'human', emoji: null, avatar_url: u.avatar_url, preview: u.bio || 'Tap to chat' };
-          c.appendChild(createCharRow(hd, () => openExistChat('human', u.username)));
+          const card = document.createElement('div');
+          card.className = 'char-card';
+          const avContent = u.avatar_url
+            ? `<img src="${esc(u.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
+            : IC_USER_LG;
+          card.innerHTML = `
+            <div class="char-card-img">${avContent}</div>
+            <div class="char-card-info">
+              <div class="char-card-name">@${esc(u.username)}</div>
+              <div class="char-card-prev">${esc(u.bio || 'Tap to chat')}</div>
+            </div>`;
+          card.onclick = () => openExistChat('human', u.username);
+          grid.appendChild(card);
         });
+        c.appendChild(grid);
       } else {
         c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">No users found for "${esc(normQ)}"</div>`;
       }
