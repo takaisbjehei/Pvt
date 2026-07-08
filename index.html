@@ -904,47 +904,54 @@ textarea::placeholder { color: var(--text3); }
 
 <!-- 5. CREATE AI SCREEN -->
 <div class="screen" id="createScreen">
-  <div class="cr-header">
-    <div class="back-btn" onclick="goTab('explore')">‹</div>
-    <div class="cr-title">Create Character</div>
-  </div>
-  <div class="cr-form">
-    <div>
-      <div class="f-label">Name</div>
-      <input class="f-input" id="cName" placeholder="e.g. Gym Goth Girl" type="text"/>
+  <div class="chars-list" style="padding: 0 16px 120px;">
+    <div class="cr-header" style="padding: 40px 0 24px; display:flex; align-items:center; gap:12px;">
+      <div class="back-btn" onclick="goTab('explore')">‹</div>
+      <div class="cr-title" style="font-size:24px; font-weight:800; letter-spacing:-0.5px;">Create Character</div>
     </div>
-    <div style="display:flex; gap:14px; align-items:flex-start;">
-      <div id="cAvatarPreview" style="width:68px;height:68px;border-radius:16px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid var(--border2)"></div>
-      <div style="flex:1;">
-        <div class="f-label">Image (Optional)</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button class="pub-btn secondary" style="padding:10px;font-size:13px;" onclick="document.getElementById('cFile').click()">🖼️ Upload</button>
-          <input class="f-input" id="cAvatarUrl" placeholder="Or paste URL..." type="text" style="font-size:13px;" oninput="document.getElementById('cAvatarPreview').innerHTML = this.value ? '<img src=\x22'+this.value+'\x22 style=\x22width:100%;height:100%;object-fit:cover\x22/>' : IC_BOT"/>
-        </div>
-        <input type="file" id="cFile" accept="image/*" style="display:none" onchange="handleFileUpload(this,'cAvatarUrl','cAvatarPreview')">
-      </div>
-    </div>
-    <div>
-      <div class="f-label">Opening Message</div>
-      <textarea class="f-ta" id="cOpener" placeholder="First message that sets the scene..."></textarea>
-    </div>
-    <div>
-      <div class="f-label">Personality & Scenario</div>
-      <textarea class="f-ta" id="cPersona" placeholder="Who are they? What's the situation? Be detailed."></textarea>
-    </div>
-    <div>
-      <div class="f-label">AI Model</div>
-      <select class="f-select" id="cModel">
-    <div style="display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border:1px solid var(--border); padding:14px 16px; border-radius:var(--radius-sm); margin-top:4px;">
+    <div class="char-card" style="padding: 24px; display:flex; flex-direction:column; gap:20px; cursor:default;">
       <div>
-        <div style="font-size:14px; font-weight:700;">Private Character</div>
-        <div style="font-size:12px; color:var(--text2); margin-top:2px;">Only you can see and chat with them</div>
+        <div class="f-label">Name</div>
+        <input class="f-input" id="cName" placeholder="e.g. Gym Goth Girl" type="text"/>
       </div>
-      <input type="checkbox" id="cIsPrivate" style="width:20px; height:20px; accent-color:var(--accent); cursor:pointer;"/>
-    </div>
-    <div style="display:flex; gap:10px; margin-top:10px;" id="cEditActions">
-      <button class="cr-btn" style="flex:1; margin-top:0;" onclick="createChar()">Save Character →</button>
-      <button class="pub-btn secondary" style="background:var(--danger); color:#fff; border-color:var(--danger); display:none;" id="cDeleteBtn" onclick="deleteEditingChar()">Delete</button>
+      <div style="display:flex; gap:14px; align-items:flex-start;">
+        <div id="cAvatarPreview" style="width:68px;height:68px;border-radius:16px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid var(--border2)"></div>
+        <div style="flex:1;">
+          <div class="f-label">Image (Optional)</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="pub-btn secondary" style="padding:10px;font-size:13px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);" onclick="document.getElementById('cFile').click()">🖼️ Upload</button>
+            <input class="f-input" id="cAvatarUrl" placeholder="Or paste URL..." type="text" style="font-size:13px;" oninput="document.getElementById('cAvatarPreview').innerHTML = this.value ? '<img src=\x22'+this.value+'\x22 style=\x22width:100%;height:100%;object-fit:cover\x22/>' : IC_BOT"/>
+          </div>
+          <input type="file" id="cFile" accept="image/*" style="display:none" onchange="handleFileUpload(this,'cAvatarUrl','cAvatarPreview')">
+        </div>
+      </div>
+      <div>
+        <div class="f-label">Opening Message</div>
+        <textarea class="f-ta" id="cOpener" placeholder="First message that sets the scene..."></textarea>
+      </div>
+      <div>
+        <div class="f-label">Personality & Scenario</div>
+        <textarea class="f-ta" id="cPersona" placeholder="Who are they? What's the situation? Be detailed."></textarea>
+      </div>
+      <div>
+        <div class="f-label">AI Model</div>
+        <select class="f-select" id="cModel">
+          <option value="llama-3.3-70b-versatile">🔥 Llama 3.3 70B — Best for roleplay</option>
+          <option value="qwen/qwen3-32b">🌸 Qwen3 32B — Creative & expressive</option>
+          <option value="llama-3.1-8b-instant">⚡ Llama 3.1 8B — Fastest</option>
+        </select>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border:1px solid var(--border); padding:14px 16px; border-radius:var(--radius-sm); margin-top:4px;">
+        <div>
+          <div style="font-size:14px; font-weight:700;">Private Character</div>
+          <div style="font-size:12px; color:var(--text2); margin-top:2px;">Only you can see and chat with them</div>
+        </div>
+        <input type="checkbox" id="cIsPrivate" style="width:20px; height:20px; accent-color:var(--accent); cursor:pointer;"/>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:10px;" id="cEditActions">
+        <button class="cr-btn" style="flex:1; margin-top:0;" onclick="createChar()">Save Character →</button>
+        <button class="pub-btn secondary" style="background:var(--danger); color:#fff; border-color:var(--danger); display:none;" id="cDeleteBtn" onclick="deleteEditingChar()">Delete</button>
+      </div>
     </div>
   </div>
 </div>
