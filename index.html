@@ -107,7 +107,7 @@ body::before {
   animation: slideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   /* On desktop, keep standard transitions */
   #chatScreen.active, #publicProfileScreen.active, #spyChatScreen.active, #ownerScreen.active, #createScreen.active {
     animation: screenIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -712,7 +712,7 @@ textarea::placeholder { color: var(--text3); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---- DESKTOP ---- */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .app-container {
     width: 95vw;
     max-width: 1200px;
@@ -1368,9 +1368,8 @@ async function renderChatsList() {
   const c = document.getElementById('activeChatsList');
   c.innerHTML = '';
 
-  const grid = document.createElement('div');
-  grid.className = 'char-grid';
-  grid.style.paddingTop = '8px';
+  const wrapDiv = document.createElement('div');
+  wrapDiv.style.paddingTop = '8px';
 
   if (chatsTabActive === 'ai') {
     // Fetch all AI conversations this user has from messages table
@@ -1404,20 +1403,20 @@ async function renderChatsList() {
       }
       aiChats.forEach(({ char, preview }) => {
         const card = document.createElement('div');
-        card.className = 'char-card';
+        card.className = 'chat-row-card';
         const avContent = char.avatar_url
-          ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
-          : IC_BOT_LG;
+          ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
+          : IC_BOT;
         card.innerHTML = `
-          <div class="char-card-img">${avContent}</div>
-          <div class="char-card-info">
-            <div class="char-card-name">${esc(char.name)}</div>
-            <div class="char-card-prev">${esc(preview || 'Tap to chat')}</div>
+          <div class="chat-row-av">${avContent}</div>
+          <div class="chat-row-info">
+            <div class="chat-row-name">${esc(char.name)}</div>
+            <div class="chat-row-prev">${esc(preview || 'Tap to chat')}</div>
           </div>`;
         card.onclick = () => openExistChat('ai', char.id);
-        grid.appendChild(card);
+        wrapDiv.appendChild(card);
       });
-      c.appendChild(grid);
+      c.appendChild(wrapDiv);
     } catch(e) {
       c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading chats.</div>`;
     }
@@ -1428,22 +1427,22 @@ async function renderChatsList() {
     }
     activeHumans.forEach(h => {
       const card = document.createElement('div');
-      card.className = 'char-card';
+      card.className = 'chat-row-card';
       const avContent = h.avatar_url
-        ? `<img src="${esc(h.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
-        : IC_USER_LG;
-      const unreadHtml = h.unread > 0 ? `<div class="unread-dot" style="position:absolute;top:10px;right:10px;z-index:5">${h.unread}</div>` : '';
+        ? `<img src="${esc(h.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
+        : IC_USER;
+      const unreadHtml = h.unread > 0 ? `<div class="unread-dot" style="margin-left: auto;">${h.unread}</div>` : '';
       card.innerHTML = `
-        ${unreadHtml}
-        <div class="char-card-img">${avContent}</div>
-        <div class="char-card-info">
-          <div class="char-card-name">@${esc(h.id)}</div>
-          <div class="char-card-prev">${esc(h.preview || 'Tap to chat')}</div>
-        </div>`;
+        <div class="chat-row-av">${avContent}</div>
+        <div class="chat-row-info">
+          <div class="chat-row-name">@${esc(h.id)}</div>
+          <div class="chat-row-prev">${esc(h.preview || 'Tap to chat')}</div>
+        </div>
+        ${unreadHtml}`;
       card.onclick = () => openExistChat('human', h.id);
-      grid.appendChild(card);
+      wrapDiv.appendChild(card);
     });
-    c.appendChild(grid);
+    c.appendChild(wrapDiv);
   }
 }
 
