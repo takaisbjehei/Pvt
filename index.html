@@ -828,12 +828,17 @@ textarea::placeholder { color: var(--text3); }
     <div>
       <div class="f-label">AI Model</div>
       <select class="f-select" id="cModel">
-        <option value="llama-3.3-70b-versatile">🔥 Llama 3.3 70B — Best for roleplay</option>
-        <option value="qwen/qwen3-32b">🌸 Qwen3 32B — Creative & expressive</option>
-        <option value="llama-3.1-8b-instant">⚡ Llama 3.1 8B — Fastest</option>
-      </select>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border:1px solid var(--border); padding:14px 16px; border-radius:var(--radius-sm); margin-top:4px;">
+      <div>
+        <div style="font-size:14px; font-weight:700;">Private Character</div>
+        <div style="font-size:12px; color:var(--text2); margin-top:2px;">Only you can see and chat with them</div>
+      </div>
+      <input type="checkbox" id="cIsPrivate" style="width:20px; height:20px; accent-color:var(--accent); cursor:pointer;"/>
     </div>
-    <button class="cr-btn" onclick="createChar()">Save Character →</button>
+    <div style="display:flex; gap:10px; margin-top:10px;" id="cEditActions">
+      <button class="cr-btn" style="flex:1; margin-top:0;" onclick="createChar()">Save Character →</button>
+      <button class="pub-btn secondary" style="background:var(--danger); color:#fff; border-color:var(--danger); display:none;" id="cDeleteBtn" onclick="deleteEditingChar()">Delete</button>
+    </div>
   </div>
 </div>
 
@@ -1300,6 +1305,9 @@ function renderExploreList() {
     const grid = document.createElement('div');
     grid.className = 'char-grid';
     chars.forEach(char => {
+      // Filter out private characters if not created by current user
+      if (char.is_private && char.created_by !== myUsername) return;
+
       const card = document.createElement('div');
       card.className = 'char-card';
       const avContent = char.avatar_url
@@ -1817,6 +1825,8 @@ function goCreate() {
   document.getElementById('cOpener').value = '';
   document.getElementById('cPersona').value = '';
   document.getElementById('cModel').value = 'llama-3.3-70b-versatile';
+  document.getElementById('cIsPrivate').checked = false;
+  document.getElementById('cDeleteBtn').style.display = 'none';
   goTab('create');
 }
 
@@ -1831,6 +1841,8 @@ function editCurrentChar() {
   document.getElementById('cOpener').value = cur.opener || '';
   document.getElementById('cPersona').value = cur.persona || '';
   document.getElementById('cModel').value = cur.model || 'llama-3.3-70b-versatile';
+  document.getElementById('cIsPrivate').checked = cur.is_private || false;
+  document.getElementById('cDeleteBtn').style.display = 'block';
   goTab('create');
 }
 
@@ -1840,13 +1852,14 @@ async function createChar() {
   const opener = document.getElementById('cOpener').value.trim();
   const persona = document.getElementById('cPersona').value.trim();
   const model = document.getElementById('cModel').value;
+  const isPrivate = document.getElementById('cIsPrivate').checked;
 
   if (!name || !opener || !persona) {
     alert('Please fill out Name, Opening Message, and Persona.');
     return;
   }
 
-  const payload = { name, avatar_url: avatarUrl, opener, persona, model, created_by: myUsername };
+  const payload = { name, avatar_url: avatarUrl, opener, persona, model, created_by: myUsername, is_private: isPrivate };
   try {
     if (editingId) {
       await supabaseClient.from('characters').update(payload).eq('id', editingId);
@@ -1871,6 +1884,19 @@ async function deleteCurrentChar() {
     closeSheet();
     await fetchCharacters();
     goTab('chats');
+  } catch(e) {
+    alert('Error deleting character.');
+  }
+}
+
+async function deleteEditingChar() {
+  if (!editingId) return;
+  if (!confirm('Delete this character? All their chat history will also be deleted.')) return;
+  try {
+    await supabaseClient.from('messages').delete().or(`sender.eq.${String(editingId)},receiver.eq.${String(editingId)}`);
+    await supabaseClient.from('characters').delete().eq('id', editingId);
+    await fetchCharacters();
+    goTab('explore');
   } catch(e) {
     alert('Error deleting character.');
   }
