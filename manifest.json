@@ -1,0 +1,17 @@
+{
+  "name": "Chai — AI Roleplay",
+  "short_name": "Chai",
+  "description": "AI Roleplay & social chat app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050507",
+  "theme_color": "#050507",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8649/8649607.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
