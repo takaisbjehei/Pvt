@@ -799,12 +799,12 @@ textarea::placeholder { color: var(--text3); }
 
 <!-- 3. PROFILE SCREEN -->
 <div class="screen" id="profileScreen">
-  <div class="chars-list" style="padding-bottom:20px;">
-    <div class="prof-hero">
-      <div id="profSelfAv" class="prof-av" onclick="handleSecretClick()"></div>
-      <div id="profDisplay" class="prof-username">@guest</div>
+  <div class="chars-list" style="padding: 0 16px 120px;">
+    <div class="prof-hero" style="padding: 40px 0 24px;">
+      <div id="profSelfAv" class="prof-av" style="width:96px; height:96px; margin:0 auto 12px; border-radius:50%; border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden;" onclick="handleSecretClick()"></div>
+      <div id="profDisplay" class="prof-username" style="text-align:center; font-size:22px; font-weight:800; letter-spacing:-0.5px;">@guest</div>
     </div>
-    <div style="padding: 0 20px; display:flex; flex-direction:column; gap:20px;">
+    <div class="char-card" style="padding: 24px; display:flex; flex-direction:column; gap:20px; cursor:default;">
       <div>
         <div class="f-label">Username</div>
         <input class="f-input" id="profUsernameInput" type="text" placeholder="e.g. coolguy99"/>
@@ -812,7 +812,7 @@ textarea::placeholder { color: var(--text3); }
       <div>
         <div class="f-label">Profile Image</div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button class="pub-btn secondary" style="font-size:13px; padding:12px;" onclick="document.getElementById('profFile').click()">🖼️ Upload</button>
+          <button class="pub-btn secondary" style="font-size:13px; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="document.getElementById('profFile').click()">🖼️ Upload</button>
           <input class="f-input" id="profAvatarInput" type="text" placeholder="Or paste image URL..." style="font-size:13px;"/>
         </div>
         <input type="file" id="profFile" accept="image/*" style="display:none" onchange="handleFileUpload(this,'profAvatarInput','profSelfAv')">
@@ -821,7 +821,7 @@ textarea::placeholder { color: var(--text3); }
         <div class="f-label">Bio</div>
         <textarea class="f-ta" id="profBioInput" placeholder="Tell people about yourself..."></textarea>
       </div>
-      <button class="cr-btn" onclick="saveMyProfile()">Save Profile</button>
+      <button class="cr-btn" style="margin-top:8px;" onclick="saveMyProfile()">Save Profile</button>
     </div>
   </div>
 </div>
@@ -1181,6 +1181,23 @@ async function fetchActiveHumans() {
         avatar_url: null
       });
     }
+
+    // Batch query avatar URLs from the users table for these users
+    const usernamesToFetch = humans.map(h => h.id);
+    if (usernamesToFetch.length > 0) {
+      const { data: userProfiles } = await supabaseClient
+        .from('users')
+        .select('username, avatar_url')
+        .in('username', usernamesToFetch);
+      
+      if (userProfiles) {
+        userProfiles.forEach(p => {
+          const match = humans.find(h => h.id === p.username);
+          if (match) match.avatar_url = p.avatar_url;
+        });
+      }
+    }
+
     activeHumans = humans;
   } catch(e) {}
 }
@@ -1529,6 +1546,8 @@ function loadProfileScreen() {
       document.getElementById('profBioInput').value = data.bio || '';
       if (data.avatar_url) {
         document.getElementById('profSelfAv').innerHTML = `<img src="${esc(data.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`;
+      } else {
+        document.getElementById('profSelfAv').innerHTML = IC_USER;
       }
     }
   });
