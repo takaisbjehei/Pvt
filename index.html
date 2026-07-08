@@ -1110,7 +1110,11 @@ async function goTab(tabName, skipHistory=false) {
   hideAllScreens();
   document.getElementById(tabName + 'Screen').classList.add('active');
   const gNav = document.getElementById('globalNav');
-  if (gNav) gNav.classList.remove('hidden');
+  const mainTabs = ['chats', 'explore', 'profile'];
+  if (gNav) {
+    if (mainTabs.includes(tabName)) gNav.classList.remove('hidden');
+    else gNav.classList.add('hidden');
+  }
   updateGlobalNav(tabName);
 
   if (tabName === 'chats') {
