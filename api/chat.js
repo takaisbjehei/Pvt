@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { model, messages, temperature, max_tokens } = req.body;
+  const { model, messages, temperature, max_tokens, stream } = req.body;
   if (!messages) {
     res.status(400).json({ error: 'Missing messages payload.' });
     return;
@@ -46,7 +46,8 @@ module.exports = async (req, res) => {
           model: model || 'llama-3.3-70b-versatile',
           messages,
           temperature: temperature !== undefined ? parseFloat(temperature) : 0.85,
-          max_tokens: max_tokens ? parseInt(max_tokens) : 450
+          max_tokens: max_tokens ? parseInt(max_tokens) : 450,
+          stream: stream ? true : false
         })
       });
 
@@ -59,9 +60,24 @@ module.exports = async (req, res) => {
         throw new Error(`APIError: ${errText}`);
       }
 
-      const data = await response.json();
-      res.status(200).json(data);
-      return;
+      if (stream) {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+        res.end();
+        return;
+      } else {
+        const data = await response.json();
+        res.status(200).json(data);
+        return;
+      }
     } catch (err) {
       console.error(`Groq endpoint attempt ${attempt} failed (Index ${keyIndex}): ${err.message}`);
       keyIndex = (keyIndex + 1) % keys.length;
