@@ -713,37 +713,170 @@ textarea::placeholder { color: var(--text3); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- DESKTOP ---- */
-@media (min-width: 1024px) and (orientation: landscape) {
+/* ---- DESKTOP LAYOUT ---- */
+@media (min-width: 1024px) {
+
+  /* Full viewport, no centering */
+  html, body {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
   .app-container {
-    width: 95vw;
-    max-width: 1200px;
-    height: 92vh;
+    width: 100vw;
+    max-width: none;
+    height: 100vh;
     flex-direction: row;
-    border-radius: 28px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 48px 120px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
-    background: rgba(8,8,14,0.85);
-    backdrop-filter: blur(32px);
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
     overflow: hidden;
   }
+
+  /* --- SIDEBAR NAV --- */
   .bot-nav {
+    position: relative !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: 220px;
+    min-width: 220px;
+    height: 100vh;
     flex-direction: column;
-    width: 88px; height: 100%;
-    border-top: none; border-right: 1px solid var(--border);
-    background: rgba(0,0,0,0.5);
-    padding: 28px 0; gap: 6px;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0 12px 32px;
+    gap: 4px;
+    border-radius: 0;
+    border-top: none;
+    border-right: 1px solid var(--border);
+    background: rgba(6, 6, 11, 0.95);
+    backdrop-filter: blur(40px);
+    max-width: none;
+    box-shadow: 2px 0 24px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+    z-index: 100;
     order: -1;
-    border-radius: 28px 0 0 28px;
   }
-  .bot-nav.hidden { transform: translateX(-120%); position: absolute; left: 0; top: 0; bottom: 0; opacity: 0; transition: all 0.25s; }
-  .nav-it { flex: none; width: 66px; height: 66px; gap: 6px; margin: 0 auto; border-radius: 18px; }
-  .nav-ic { font-size: 24px; }
-  #mainScreens { flex: 1; position: relative; overflow: hidden; display: flex; background: rgba(255,255,255,0.005); }
-  #mainScreens > .screen { width: 100%; height: 100%; position: absolute; inset: 0; }
-  .input-area { padding-bottom: 24px; }
-  .char-grid { grid-template-columns: repeat(3, 1fr); }
+
+  .bot-nav.hidden {
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+    display: flex !important;
+  }
+
+  /* Brand logo at top of sidebar */
+  .bot-nav::before {
+    content: 'chai';
+    display: block;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: -1.2px;
+    color: var(--accent-light);
+    padding: 36px 16px 28px;
+    font-family: 'Inter', sans-serif;
+    flex-shrink: 0;
+  }
+
+  /* Horizontal nav items become vertical with labels */
+  .nav-it {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 13px 16px;
+    gap: 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    text-transform: none;
+    width: 100%;
+    color: var(--text2);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-it.active {
+    background: rgba(124,58,237,0.14);
+    color: var(--accent-light);
+    box-shadow: none;
+  }
+
+  .nav-it:active { transform: scale(0.98); }
+  .nav-it.active .nav-ic { transform: none; }
+  .nav-ic { font-size: 20px; }
+
+  /* --- MAIN AREA: two-column grid --- */
+  #mainScreens {
+    flex: 1;
+    display: grid !important;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: 100%;
+    position: relative !important;
+    overflow: hidden;
+    flex-direction: unset !important;
+    min-width: 0;
+  }
+
+  /* Override absolute positioning — screens are grid cells on desktop */
+  #mainScreens > .screen {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+  }
+  #mainScreens > .screen.active { display: flex; }
+
+  /* Desktop empty panel occupies right column */
+  #desktopEmpty {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* List screens: always in left column */
+  #chatsScreen, #exploreScreen, #profileScreen {
+    grid-column: 1;
+    grid-row: 1;
+    border-right: 1px solid var(--border);
+    background: rgba(8, 8, 14, 0.7);
+  }
+
+  /* Detail screens: always in right column */
+  #chatScreen, #publicProfileScreen, #createScreen, #spyChatScreen, #ownerScreen {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* Desktop: no slide-in for screens (it's a split panel, not page nav) */
+  #chatScreen.active, #publicProfileScreen.active, #spyChatScreen.active,
+  #ownerScreen.active, #createScreen.active {
+    animation: screenIn 0.22s ease forwards;
+  }
+  #chatsScreen.active, #exploreScreen.active, #profileScreen.active {
+    animation: none !important;
+  }
+
+  /* Fix header padding (no phone notch on desktop) */
+  .sel-header { padding: 28px 24px 14px; }
+  .chat-header { padding: 16px 20px 14px; }
+
+  /* Fix scrollable list bottom padding (no floating nav) */
+  .chars-list { padding-bottom: 24px; }
+
+  /* Bigger character grid */
+  .char-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 16px 24px; }
+
+  /* Desktop: hide mobile back button (use sidebar nav instead) */
+  .back-btn { display: none !important; }
+
+  /* Chat input area - more breathing room */
+  .input-area { padding: 16px 24px 24px; }
+  .messages { padding: 20px 24px 16px; }
 }
 
 /* ---- SPY DASHBOARD ---- */
@@ -864,6 +997,9 @@ textarea::placeholder { color: var(--text3); }
   <div class="sel-header">
     <div class="sel-title">Explore</div>
     <div style="display:flex;gap:8px;align-items:center;">
+      <div id="adminLockBtn" style="cursor:pointer;padding:8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center" onclick="openAdminModal()" title="Admin">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
       <div style="cursor:pointer;padding:8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center" onclick="toggleFullscreen()" title="Toggle Fullscreen">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
       </div>
@@ -1070,6 +1206,18 @@ textarea::placeholder { color: var(--text3); }
   </div>
 </div>
 
+
+<!-- DESKTOP: empty right-panel placeholder (shown when no chat is open on desktop) -->
+<div id="desktopEmpty" style="display:none;">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;color:var(--text3);user-select:none;">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(139,92,246,0.25)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <div style="text-align:center;">
+      <div style="font-size:17px;font-weight:700;color:var(--text2);margin-bottom:8px;">Select a conversation</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text3);max-width:220px;line-height:1.6;">Choose a character or person from the left panel to start chatting.</div>
+    </div>
+  </div>
+</div>
+
   </div> <!-- mainScreens -->
 
   <!-- GLOBAL BOTTOM NAV -->
@@ -1083,11 +1231,38 @@ textarea::placeholder { color: var(--text3); }
       <span>Explore</span>
     </div>
     <div id="nav-profile" class="nav-it" onclick="goTab('profile')">
-      <div class="nav-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="nav-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <span>Profile</span>
     </div>
   </div>
-</div> <!-- appContainer -->
+
+
+<!-- ADMIN MODAL -->
+<div id="adminModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:28px;padding:36px 28px;width:min(92vw,380px);display:flex;flex-direction:column;gap:20px;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:14px;background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:800;letter-spacing:-0.4px;">Admin Settings</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:2px;">Enter admin password to manage characters</div>
+      </div>
+    </div>
+    <div id="adminStatusBadge" style="display:none;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;text-align:center;"></div>
+    <input id="adminPassInput" type="password" placeholder="Admin password..." class="f-input" style="letter-spacing:2px;" onkeydown="if(event.key==='Enter')submitAdminPass()"/>
+    <div style="display:flex;gap:10px;">
+      <button class="pub-btn secondary" style="flex:1;" onclick="closeAdminModal()">Cancel</button>
+      <button class="cr-btn" style="flex:1;margin:0;" onclick="submitAdminPass()">Unlock</button>
+    </div>
+    <div id="adminActivePanel" style="display:none;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:10px;">⚠️ Admin Mode Active</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;">You can now see hidden characters in Explore. Click the <strong>eye icon</strong> on any character card to hide or show it from all users.</div>
+      <button class="pub-btn secondary" style="width:100%;margin-top:14px;border-color:var(--danger);color:var(--danger);" onclick="logoutAdmin()">Exit Admin Mode</button>
+    </div>
+  </div>
+</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1126,6 +1301,8 @@ INTIMACY & DEPTH:
 - Some responses are long and immersive. Some are a single whispered action. Let the scene breathe.`;
 
 // ========== STATE ==========
+let isAdmin = false; // admin mode state
+
 let myUsername = null;
 let chars = [];
 let cur = null;
@@ -1312,10 +1489,20 @@ async function fetchActiveHumans() {
 }
 
 // ========== NAVIGATION ==========
+function isDesktop() {
+  return window.innerWidth >= 1024;
+}
+
 function hideAllScreens() {
-  document.querySelectorAll('#mainScreens > .screen').forEach(s => s.classList.remove('active'));
+  const desktop = isDesktop();
+  document.querySelectorAll('#mainScreens > .screen').forEach(s => {
+    // On desktop: keep list screens visible — they live in the left panel
+    if (desktop && ['chatsScreen','exploreScreen','profileScreen'].includes(s.id)) return;
+    s.classList.remove('active');
+  });
   const gNav = document.getElementById('globalNav');
-  if (gNav) gNav.classList.add('hidden');
+  // On desktop nav is always visible (it's a sidebar)
+  if (gNav && !desktop) gNav.classList.add('hidden');
 }
 
 function updateGlobalNav(tabName) {
@@ -1326,15 +1513,22 @@ function updateGlobalNav(tabName) {
 
 async function goTab(tabName, skipHistory=false) {
   if (!skipHistory) history.pushState({ screen: tabName + 'Screen' }, '', '#' + tabName);
-  hideAllScreens();
-  document.getElementById(tabName + 'Screen').classList.add('active');
-  const gNav = document.getElementById('globalNav');
-  const mainTabs = ['chats', 'explore', 'profile'];
-  if (gNav) {
-    if (mainTabs.includes(tabName)) gNav.classList.remove('hidden');
-    else gNav.classList.add('hidden');
+  const desktop = isDesktop();
+
+  if (desktop) {
+    // On desktop: switch list screens without touching the right panel
+    ['chatsScreen','exploreScreen','profileScreen'].forEach(id => {
+      document.getElementById(id)?.classList.remove('active');
+    });
+    document.getElementById(tabName + 'Screen')?.classList.add('active');
+    updateGlobalNav(tabName);
+  } else {
+    hideAllScreens();
+    document.getElementById(tabName + 'Screen').classList.add('active');
+    const gNav = document.getElementById('globalNav');
+    if (gNav) gNav.classList.remove('hidden');
+    updateGlobalNav(tabName);
   }
-  updateGlobalNav(tabName);
 
   if (tabName === 'chats') {
     await fetchActiveHumans();
@@ -1348,8 +1542,17 @@ async function goTab(tabName, skipHistory=false) {
 }
 
 function navBack(fallbackTab) {
+  if (isDesktop()) {
+    // On desktop: hide detail screen, show empty panel
+    ['chatScreen','publicProfileScreen','createScreen','spyChatScreen','ownerScreen'].forEach(id => {
+      document.getElementById(id)?.classList.remove('active');
+    });
+    const empty = document.getElementById('desktopEmpty');
+    if (empty) empty.style.display = '';
+    return;
+  }
   if (history.length > 1) history.back();
-  else goTab(fallbackTab);
+  else goTab(fallbackTab || 'chats');
 }
 
 window.onpopstate = function(e) {
@@ -1528,15 +1731,31 @@ function renderExploreList() {
     const grid = document.createElement('div');
     grid.className = 'char-grid';
     chars.forEach(char => {
-      // Filter out private characters if not created by current user
+      // Filter: hide chars with is_hidden=true unless admin
+      if (char.is_hidden && !isAdmin) return;
+      // Filter: hide private chars not created by current user
       if (char.is_private && char.created_by !== myUsername) return;
 
       const card = document.createElement('div');
       card.className = 'char-card';
+      card.style.position = 'relative';
       const avContent = char.avatar_url
         ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/>`
         : `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+      // Admin: hidden badge + toggle button
+      const hiddenBadge = (isAdmin && char.is_hidden)
+        ? `<div style="position:absolute;top:8px;left:8px;background:rgba(244,63,94,0.9);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:0.5px;z-index:2;">HIDDEN</div>`
+        : '';
+      const adminToggle = isAdmin
+        ? `<button onclick="event.stopPropagation();adminToggleHide(${char.id}, ${!!char.is_hidden})" style="position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,0.7);border:1px solid ${char.is_hidden ? 'var(--danger)' : 'var(--border2)'};border-radius:8px;padding:5px 7px;cursor:pointer;display:flex;align-items:center;" title="${char.is_hidden ? 'Show character' : 'Hide character'}">${char.is_hidden
+          ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+          : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+        }</button>`
+        : '';
+
       card.innerHTML = `
+        ${hiddenBadge}${adminToggle}
         <div class="char-card-img">${avContent}</div>
         <div class="char-card-info">
           <div class="char-card-name">${esc(char.name)}</div>
@@ -1702,6 +1921,12 @@ async function goChat(charObj, skipHistory=false) {
   
   hideAllScreens();
   document.getElementById('chatScreen').classList.add('active');
+
+  // On desktop: hide the empty placeholder
+  if (isDesktop()) {
+    const empty = document.getElementById('desktopEmpty');
+    if (empty) empty.style.display = 'none';
+  }
 
   const avNode = cur.avatar_url
     ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
@@ -2443,6 +2668,76 @@ async function showSpyLogs(userA, userB) {
     }
   } catch(e) {
     msgsContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading logs.</div>`;
+  }
+}
+
+// ========== ADMIN SYSTEM ==========
+function openAdminModal() {
+  const modal = document.getElementById('adminModal');
+  modal.style.display = 'flex';
+  document.getElementById('adminPassInput').value = '';
+  document.getElementById('adminStatusBadge').style.display = 'none';
+  // If already admin, show the active panel
+  document.getElementById('adminActivePanel').style.display = isAdmin ? 'block' : 'none';
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').style.display = 'none';
+}
+
+function submitAdminPass() {
+  const val = document.getElementById('adminPassInput').value.trim();
+  const badge = document.getElementById('adminStatusBadge');
+  if (val === OWNER_PASS) {
+    isAdmin = true;
+    // Update the lock icon to show admin is active
+    const lockBtn = document.getElementById('adminLockBtn');
+    if (lockBtn) {
+      lockBtn.style.borderColor = 'var(--danger)';
+      lockBtn.style.background = 'rgba(244,63,94,0.12)';
+      lockBtn.querySelector('svg').setAttribute('stroke', 'var(--danger)');
+    }
+    badge.style.display = 'block';
+    badge.style.background = 'rgba(16,185,129,0.12)';
+    badge.style.color = 'var(--green)';
+    badge.style.border = '1px solid rgba(16,185,129,0.3)';
+    badge.textContent = '✓ Admin mode unlocked';
+    document.getElementById('adminActivePanel').style.display = 'block';
+    // Refresh explore to show hidden chars
+    fetchCharacters().then(() => renderExploreList());
+  } else {
+    badge.style.display = 'block';
+    badge.style.background = 'rgba(244,63,94,0.12)';
+    badge.style.color = 'var(--danger)';
+    badge.style.border = '1px solid rgba(244,63,94,0.3)';
+    badge.textContent = '✗ Wrong password';
+  }
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  closeAdminModal();
+  const lockBtn = document.getElementById('adminLockBtn');
+  if (lockBtn) {
+    lockBtn.style.borderColor = '';
+    lockBtn.style.background = 'var(--surface2)';
+    lockBtn.querySelector('svg').setAttribute('stroke', 'var(--text2)');
+  }
+  fetchCharacters().then(() => renderExploreList());
+}
+
+async function adminToggleHide(charId, currentlyHidden) {
+  try {
+    await supabaseClient
+      .from('characters')
+      .update({ is_hidden: !currentlyHidden })
+      .eq('id', charId);
+    // Update local chars array
+    const c = chars.find(ch => ch.id === charId);
+    if (c) c.is_hidden = !currentlyHidden;
+    renderExploreList();
+  } catch(e) {
+    console.error('Toggle hide failed:', e);
   }
 }
 
