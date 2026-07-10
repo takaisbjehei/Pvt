@@ -1216,16 +1216,8 @@ textarea::placeholder { color: var(--text3); }
 </div>
 
 <div id="pushPromptOverlay" class="pwd-ov" style="display:none; z-index:9500;">
-  <div class="pwd-card" style="text-align:center; max-width:350px;">
-    <div class="pwd-logo" style="display:flex;justify-content:center;background:rgba(139,92,246,0.1);width:52px;height:52px;border-radius:50%;margin:0 auto 16px;align-items:center;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    </div>
-    <div class="pwd-title">Enable Notifications?</div>
-    <div class="pwd-sub" style="margin-bottom:20px; line-height:1.5;">Get updates on your phone instantly when friends or characters message you.</div>
-    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
-      <button class="cr-btn" style="margin:0; width:100%;" onclick="acceptPushPrompt()">Enable Notifications</button>
-      <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Maybe Later</button>
-    </div>
+  <div id="pushPromptCard" class="pwd-card" style="text-align:center; max-width:350px;">
+    <!-- Rendered dynamically via renderPushPrompt() -->
   </div>
 </div>
 
@@ -1582,6 +1574,7 @@ async function checkUserOnBoot() {
   // Prompt existing users once if they haven't been prompted yet
   if (!localStorage.getItem('pvt_push_prompted')) {
     document.getElementById('pushPromptOverlay').style.display = 'flex';
+    renderPushPrompt();
   }
 }
 
@@ -1598,6 +1591,7 @@ async function initializeUser() {
   // Show push notification opt-in prompt before booting into the app
   if (!localStorage.getItem('pvt_push_prompted')) {
     document.getElementById('pushPromptOverlay').style.display = 'flex';
+    renderPushPrompt();
   } else {
     initApp();
   }
@@ -3105,6 +3099,89 @@ function showInAppNotification(name, avatarUrl, content, type, targetId) {
 
 // ========== PUSH NOTIFICATIONS ENGINE ==========
 const VAPID_PUB = 'BDA_p5AObvxS9O2xFfp0b8lxTL2vqw8K_MsD7coQN5MHPFM55GDOa1zx-_2Y-Lfaw3D5C4QdkdMmTxxpskcJ8b0';
+let deferredPrompt = null;
+
+// Track Android Chrome installation trigger
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  renderPushPrompt();
+});
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function getMobileOS() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  if (/android/i.test(ua)) return 'android';
+  if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
+  return 'desktop';
+}
+
+function renderPushPrompt() {
+  const card = document.getElementById('pushPromptCard');
+  if (!card) return;
+  const os = getMobileOS();
+  const pwa = isStandalone();
+
+  if (os === 'ios' && !pwa) {
+    card.innerHTML = `
+      <div class="pwd-logo" style="display:flex;justify-content:center;background:rgba(139,92,246,0.1);width:52px;height:52px;border-radius:50%;margin:0 auto 16px;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </div>
+      <div class="pwd-title">Install to Enable Push</div>
+      <div class="pwd-sub" style="margin-bottom:16px; line-height:1.5; font-size:13px;">
+        iPhone requires Chai to be added to your Home Screen to receive notifications.
+      </div>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border2); border-radius:14px; padding:12px 14px; font-size:12px; color:var(--text2); text-align:left; line-height:1.6; margin-bottom:18px;">
+        1. Tap the <strong>Share</strong> button <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin:0 2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> at the bottom of Safari.<br>
+        2. Scroll down and select <strong>Add to Home Screen</strong>.<br>
+        3. Open the installed <strong>Chai</strong> app to enable alerts.
+      </div>
+      <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Close Guide</button>
+    `;
+  } else if (os === 'android' && !pwa) {
+    card.innerHTML = `
+      <div class="pwd-logo" style="display:flex;justify-content:center;background:rgba(139,92,246,0.1);width:52px;height:52px;border-radius:50%;margin:0 auto 16px;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <div class="pwd-title">Add to Home Screen</div>
+      <div class="pwd-sub" style="margin-bottom:20px; line-height:1.5; font-size:13px;">
+        Install Chai on your device to keep notifications active even when the website is closed.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+        <button class="cr-btn" style="margin:0; width:100%;" onclick="triggerAndroidInstall()">Install App</button>
+        <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Maybe Later</button>
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="pwd-logo" style="display:flex;justify-content:center;background:rgba(139,92,246,0.1);width:52px;height:52px;border-radius:50%;margin:0 auto 16px;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="pwd-title">Enable Notifications?</div>
+      <div class="pwd-sub" style="margin-bottom:20px; line-height:1.5;">Get updates on your phone instantly when friends or characters message you.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+        <button class="cr-btn" style="margin:0; width:100%;" onclick="acceptPushPrompt()">Enable Notifications</button>
+        <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Maybe Later</button>
+      </div>
+    `;
+  }
+}
+
+function triggerAndroidInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((result) => {
+      if (result.outcome === 'accepted') showToast('Chai installed!');
+      deferredPrompt = null;
+      dismissPushPrompt();
+    });
+  } else {
+    showToast('Tap Chrome Menu (3 dots) -> "Add to Home screen"');
+  }
+}
 
 async function acceptPushPrompt() {
   localStorage.setItem('pvt_push_prompted', 'true');
