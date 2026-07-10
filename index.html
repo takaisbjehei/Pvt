@@ -1215,6 +1215,20 @@ textarea::placeholder { color: var(--text3); }
   </div>
 </div>
 
+<div id="pushPromptOverlay" class="pwd-ov" style="display:none; z-index:9500;">
+  <div class="pwd-card" style="text-align:center; max-width:350px;">
+    <div class="pwd-logo" style="display:flex;justify-content:center;background:rgba(139,92,246,0.1);width:52px;height:52px;border-radius:50%;margin:0 auto 16px;align-items:center;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </div>
+    <div class="pwd-title">Enable Notifications?</div>
+    <div class="pwd-sub" style="margin-bottom:20px; line-height:1.5;">Get updates on your phone instantly when friends or characters message you.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+      <button class="cr-btn" style="margin:0; width:100%;" onclick="acceptPushPrompt()">Enable Notifications</button>
+      <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Maybe Later</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- DESKTOP: empty right-panel placeholder (shown when no chat is open on desktop) -->
 <div id="desktopEmpty" style="display:none;">
@@ -1559,11 +1573,16 @@ async function checkUserOnBoot() {
   try {
     const { data } = await supabaseClient.from('users').select('username').eq('username', myUsername).single();
     if (!data) {
-      // Ghost session — re-register
       await supabaseClient.from('users').upsert({ username: myUsername });
     }
   } catch(e) {}
-  initApp();
+  
+  await initApp();
+  
+  // Prompt existing users once if they haven't been prompted yet
+  if (!localStorage.getItem('pvt_push_prompted')) {
+    document.getElementById('pushPromptOverlay').style.display = 'flex';
+  }
 }
 
 async function initializeUser() {
@@ -1575,7 +1594,13 @@ async function initializeUser() {
     await supabaseClient.from('users').upsert({ username: u });
   } catch(e) {}
   document.getElementById('welcomeOverlay').style.display = 'none';
-  initApp();
+  
+  // Show push notification opt-in prompt before booting into the app
+  if (!localStorage.getItem('pvt_push_prompted')) {
+    document.getElementById('pushPromptOverlay').style.display = 'flex';
+  } else {
+    initApp();
+  }
 }
 
 async function initApp() {
@@ -3080,6 +3105,55 @@ function showInAppNotification(name, avatarUrl, content, type, targetId) {
 
 // ========== PUSH NOTIFICATIONS ENGINE ==========
 const VAPID_PUB = 'BDA_p5AObvxS9O2xFfp0b8lxTL2vqw8K_MsD7coQN5MHPFM55GDOa1zx-_2Y-Lfaw3D5C4QdkdMmTxxpskcJ8b0';
+
+async function acceptPushPrompt() {
+  localStorage.setItem('pvt_push_prompted', 'true');
+  document.getElementById('pushPromptOverlay').style.display = 'none';
+  // Check if we need to initialize app (if not already logged in/booted)
+  const isRegistered = !!localStorage.getItem('my_username');
+  
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted' && 'serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      const newSub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8(VAPID_PUB)
+      });
+      await supabaseClient
+        .from('push_subscriptions')
+        .upsert({
+          username: myUsername,
+          subscription: newSub.toJSON()
+        });
+      showToast('Notifications enabled successfully!');
+    } else {
+      showToast('Notifications not enabled');
+    }
+  } catch(e) {
+    console.error('Push prompt setup failed:', e);
+    showToast('Failed to enable: ' + e.message, true);
+  }
+  
+  // Make sure app is booted
+  const chatsList = document.getElementById('activeChatsList');
+  if (chatsList && !chatsList.children.length) {
+    initApp();
+  }
+  updatePushToggleUI();
+}
+
+function dismissPushPrompt() {
+  localStorage.setItem('pvt_push_prompted', 'true');
+  document.getElementById('pushPromptOverlay').style.display = 'none';
+  showToast('You can enable notifications later in Profile settings.');
+  
+  // Make sure app is booted
+  const chatsList = document.getElementById('activeChatsList');
+  if (chatsList && !chatsList.children.length) {
+    initApp();
+  }
+}
 
 function urlBase64ToUint8(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
