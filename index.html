@@ -1575,16 +1575,38 @@ async function initApp() {
   renderChatsList();
   loadProfileScreen();
 
-  // Global realtime: listen for incoming human DMs
+  // Global realtime: listen for incoming human DMs and AI replies
   globalSub = supabaseClient.channel('global-inbox-' + myUsername)
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'messages',
       filter: `receiver=eq.${myUsername}`
     }, payload => {
       const p = payload.new;
-      const charIds = chars.map(c => String(c.id));
-      if (charIds.includes(String(p.sender))) return; // ignore AI replies here
-      if (!cur || cur.id !== p.sender) {
+      
+      // Ignore if user is currently looking at this active conversation
+      const chatActive = document.getElementById('chatScreen').classList.contains('active');
+      if (chatActive && cur && String(cur.id) === String(p.sender)) {
+        return;
+      }
+
+      const senderStr = String(p.sender);
+      const isAi = chars.some(c => String(c.id) === senderStr);
+      
+      let name = '';
+      let avatarUrl = '';
+      let type = '';
+
+      if (isAi) {
+        const charObj = chars.find(c => String(c.id) === senderStr);
+        if (charObj) {
+          name = charObj.name;
+          avatarUrl = charObj.avatar_url;
+          type = 'ai';
+          aiUnread[senderStr] = true;
+          renderChatsList();
+        }
+      } else {
+        type = 'human';
         let ah = activeHumans.find(x => x.id === p.sender);
         if (!ah) {
           ah = { id: p.sender, preview: p.content, unread: 0, avatar_url: null };
@@ -1592,7 +1614,13 @@ async function initApp() {
         }
         ah.unread = (ah.unread || 0) + 1;
         ah.preview = p.content;
+        name = '@' + p.sender;
+        avatarUrl = ah.avatar_url || '';
         renderChatsList();
+      }
+
+      if (name) {
+        showInAppNotification(name, avatarUrl, p.content, type, p.sender);
       }
     })
     .subscribe();
@@ -2966,6 +2994,64 @@ function showToast(msg, isError = false) {
   ].join(';');
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(() => t.remove(), 400); }, 2800);
+}
+
+function showInAppNotification(name, avatarUrl, content, type, targetId) {
+  const existing = document.getElementById('inAppNotification');
+  if (existing) existing.remove();
+
+  const container = document.createElement('div');
+  container.id = 'inAppNotification';
+  container.style.cssText = [
+    'position:fixed', 'top:20px', 'left:50%', 'transform:translate(-50%, -40px)',
+    'width:min(92vw, 420px)', 'background:rgba(10, 10, 18, 0.9)',
+    'border:1px solid rgba(255,255,255,0.08)', 'border-radius:20px',
+    'backdrop-filter:blur(30px)', 'padding:12px 16px', 'z-index:100000',
+    'display:flex', 'align-items:center', 'gap:12px',
+    'box-shadow:0 24px 48px rgba(0,0,0,0.55), 0 0 24px rgba(139,92,246,0.12)',
+    'cursor:pointer', 'opacity:0', 'transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease',
+    'font-family:Inter,sans-serif'
+  ].join(';');
+
+  const avContent = avatarUrl 
+    ? `<img src="${esc(avatarUrl)}" style="width:100%;height:100%;object-fit:cover"/>`
+    : (type === 'ai' ? IC_BOT : IC_USER);
+
+  container.innerHTML = `
+    <div style="width:38px;height:38px;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface2);">
+      ${avContent}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${esc(name)}</span>
+        <span style="font-size:9px;font-weight:800;color:var(--accent-light);background:rgba(139,92,246,0.12);padding:2px 5px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;">${type === 'ai' ? 'AI' : 'human'}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">${esc(content)}</div>
+    </div>
+    <div style="color:var(--text3);font-size:16px;padding-left:4px;user-select:none;">&rsaquo;</div>
+  `;
+
+  container.onclick = () => {
+    container.style.transform = 'translate(-50%, -40px)';
+    container.style.opacity = '0';
+    setTimeout(() => container.remove(), 400);
+    openExistChat(type, targetId);
+  };
+
+  document.body.appendChild(container);
+
+  setTimeout(() => {
+    container.style.transform = 'translate(-50%, 0)';
+    container.style.opacity = '1';
+  }, 20);
+
+  setTimeout(() => {
+    if (container.parentNode) {
+      container.style.transform = 'translate(-50%, -40px)';
+      container.style.opacity = '0';
+      setTimeout(() => { if (container.parentNode) container.remove(); }, 400);
+    }
+  }, 4500);
 }
 
 // ========== MOOD SYSTEM ==========
