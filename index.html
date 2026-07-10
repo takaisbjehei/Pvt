@@ -2727,18 +2727,43 @@ function logoutAdmin() {
 }
 
 async function adminToggleHide(charId, currentlyHidden) {
+  const newVal = !currentlyHidden;
   try {
-    await supabaseClient
+    const { data, error } = await supabaseClient
       .from('characters')
-      .update({ is_hidden: !currentlyHidden })
-      .eq('id', charId);
-    // Update local chars array
-    const c = chars.find(ch => ch.id === charId);
-    if (c) c.is_hidden = !currentlyHidden;
+      .update({ is_hidden: newVal })
+      .eq('id', charId)
+      .select();
+    if (error) {
+      console.error('Supabase update error:', JSON.stringify(error));
+      showToast('Error: ' + (error.message || error.code || 'RLS blocked'), true);
+      return;
+    }
+    // Update local chars array (safe string comparison)
+    const c = chars.find(ch => String(ch.id) === String(charId));
+    if (c) c.is_hidden = newVal;
     renderExploreList();
+    showToast(newVal ? 'Character hidden from all users' : 'Character now visible to all');
   } catch(e) {
     console.error('Toggle hide failed:', e);
+    showToast('Failed: ' + (e.message || 'unknown error'), true);
   }
+}
+
+function showToast(msg, isError = false) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = [
+    'position:fixed', 'bottom:90px', 'left:50%', 'transform:translateX(-50%)',
+    `background:${isError ? 'rgba(244,63,94,0.95)' : 'rgba(16,185,129,0.95)'}`,
+    'color:#fff', 'padding:12px 22px', 'border-radius:14px',
+    'font-size:14px', 'font-weight:700', 'z-index:99999',
+    'box-shadow:0 8px 24px rgba(0,0,0,0.5)', 'pointer-events:none',
+    'white-space:nowrap', 'max-width:90vw', 'text-align:center',
+    'font-family:Inter,sans-serif'
+  ].join(';');
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(() => t.remove(), 400); }, 2800);
 }
 
 // ========== MOOD SYSTEM ==========
