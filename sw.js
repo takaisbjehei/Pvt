@@ -1,10 +1,10 @@
 self.addEventListener('push', function(event) {
-  let data = { title: 'Chai', body: 'You have a new message!' };
+  let data = { title: 'R.P.A.I', body: 'You have a new message!' };
   if (event.data) {
     try {
       data = event.data.json();
     } catch (e) {
-      data = { title: 'Chai', body: event.data.text() };
+      data = { title: 'R.P.A.I', body: event.data.text() };
     }
   }
 

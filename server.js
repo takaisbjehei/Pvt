@@ -26,6 +26,7 @@ try {
 }
 
 const pushHandler = require('./api/push');
+const cronCheckHandler = require('./api/cron-check');
 
 const server = http.createServer((req, res) => {
   // CORS Headers for API compatibility
@@ -75,6 +76,11 @@ const server = http.createServer((req, res) => {
     runHandler(pushHandler);
     return;
   }
+  if (req.url === '/api/cron-check') {
+    // support both GET and POST locally for easy browser testing
+    runHandler(cronCheckHandler);
+    return;
+  }
 
   // Route Static assets
   let filePath = req.url === '/' ? '/index.html' : req.url;
@@ -98,6 +104,6 @@ const server = http.createServer((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\nChai local environment server running!`);
+  console.log(`\nR.P.A.I local environment server running!`);
   console.log(`Open your browser and navigate to: http://localhost:${PORT}\n`);
 });

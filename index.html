@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>Chai — AI Roleplay</title>
+<title>R.P.A.I — AI Roleplay</title>
 <!-- PWA & Immersive mobile fullscreen tags -->
 <link rel="manifest" href="/manifest.json"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -769,7 +769,7 @@ textarea::placeholder { color: var(--text3); }
 
   /* Brand logo at top of sidebar */
   .bot-nav::before {
-    content: 'chai';
+    content: 'r.p.a.i';
     display: block;
     font-size: 24px;
     font-weight: 900;
@@ -1208,7 +1208,7 @@ textarea::placeholder { color: var(--text3); }
     <div class="pwd-logo" style="display:flex;justify-content:center">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
     </div>
-    <div class="pwd-title">Welcome to Chai</div>
+    <div class="pwd-title">Welcome to R.P.A.I</div>
     <div class="pwd-sub">Choose a username to start chatting with AI characters and real people.</div>
     <input class="f-input" id="welcomeUsernameInput" type="text" placeholder="e.g. user_123" style="text-align:center;" onkeydown="if(event.key==='Enter')initializeUser()"/>
     <button class="cr-btn" onclick="initializeUser()">Get Started →</button>
@@ -3132,12 +3132,12 @@ function renderPushPrompt() {
       </div>
       <div class="pwd-title">Install to Enable Push</div>
       <div class="pwd-sub" style="margin-bottom:16px; line-height:1.5; font-size:13px;">
-        iPhone requires Chai to be added to your Home Screen to receive notifications.
+        iPhone requires R.P.A.I to be added to your Home Screen to receive notifications.
       </div>
       <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border2); border-radius:14px; padding:12px 14px; font-size:12px; color:var(--text2); text-align:left; line-height:1.6; margin-bottom:18px;">
         1. Tap the <strong>Share</strong> button <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin:0 2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> at the bottom of Safari.<br>
         2. Scroll down and select <strong>Add to Home Screen</strong>.<br>
-        3. Open the installed <strong>Chai</strong> app to enable alerts.
+        3. Open the installed <strong>R.P.A.I</strong> app to enable alerts.
       </div>
       <button class="pub-btn secondary" style="width:100%; padding:13px; border-radius:var(--radius-sm); border:1.5px solid var(--border2);" onclick="dismissPushPrompt()">Close Guide</button>
     `;
@@ -3148,7 +3148,7 @@ function renderPushPrompt() {
       </div>
       <div class="pwd-title">Add to Home Screen</div>
       <div class="pwd-sub" style="margin-bottom:20px; line-height:1.5; font-size:13px;">
-        Install Chai on your device to keep notifications active even when the website is closed.
+        Install R.P.A.I on your device to keep notifications active even when the website is closed.
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
         <button class="cr-btn" style="margin:0; width:100%;" onclick="triggerAndroidInstall()">Install App</button>
@@ -3174,7 +3174,7 @@ function triggerAndroidInstall() {
   if (deferredPrompt) {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then((result) => {
-      if (result.outcome === 'accepted') showToast('Chai installed!');
+      if (result.outcome === 'accepted') showToast('R.P.A.I installed!');
       deferredPrompt = null;
       dismissPushPrompt();
     });
