@@ -820,6 +820,24 @@ textarea::placeholder { color: var(--text3); }
   pointer-events: none;
   z-index: 9999;
 }
+
+/* ---- MOOD RINGS & UNREAD GLOW ---- */
+@keyframes moodWarmPulse {
+  0%, 100% { box-shadow: 0 0 0 3px hsl(35,90%,60%); }
+  50% { box-shadow: 0 0 0 3px hsl(35,90%,60%), 0 0 14px hsla(35,90%,60%,0.45); }
+}
+@keyframes moodObsessedPulse {
+  0%, 100% { box-shadow: 0 0 0 3px hsl(330,80%,65%), 0 0 8px hsla(330,80%,65%,0.5); }
+  50% { box-shadow: 0 0 0 3px hsl(330,80%,65%), 0 0 26px hsla(330,80%,65%,0.75); }
+}
+@keyframes avatarGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--accent), 0 0 10px var(--accent-glow); }
+  50% { box-shadow: 0 0 0 4px var(--accent), 0 0 30px var(--accent-glow); }
+}
+.mood-cold .chat-row-av { box-shadow: 0 0 0 3px hsl(220,45%,50%); }
+.mood-warm .chat-row-av { animation: moodWarmPulse 2.8s ease-in-out infinite; }
+.mood-obsessed .chat-row-av { animation: moodObsessedPulse 1.6s ease-in-out infinite; }
+.av-has-unread .chat-row-av { animation: avatarGlowPulse 1.8s ease-in-out infinite !important; }
 </style>
 </head>
 <body>
@@ -1123,6 +1141,7 @@ let isTyping = false;
 let typingTimeout = null;
 // activeHumans is now derived from DB, kept in memory only
 let activeHumans = [];
+let aiUnread = {}; // tracks which AI character IDs have unread (new) messages
 
 // SVG icon constants — no more emoji
 const IC_BOT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4"/><path d="M8 7h8"/></svg>';
@@ -1430,7 +1449,9 @@ async function renderChatsList() {
       }
       aiChats.forEach(({ char, preview }) => {
         const card = document.createElement('div');
-        card.className = 'chat-row-card';
+        const hasUnread = !!aiUnread[String(char.id)];
+        const mood = getCharMood(char.id);
+        card.className = `chat-row-card ${hasUnread ? 'av-has-unread' : 'mood-' + mood}`;
         const avContent = char.avatar_url
           ? `<img src="${esc(char.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
           : IC_BOT;
@@ -1646,6 +1667,8 @@ function loadProfileScreen() {
 // ========== OPEN EXISTING CHAT ==========
 async function openExistChat(type, targetId) {
   if (type === 'ai') {
+    // Clear unread glow when user opens the chat
+    delete aiUnread[String(targetId)];
     const aiChar = chars.find(x => String(x.id) === String(targetId));
     if (aiChar) { aiChar.type = 'ai'; goChat(aiChar); }
   } else {
@@ -1930,6 +1953,7 @@ async function sendMsg() {
     else activeHumans.unshift({ id: cur.id, preview: val, unread: 0, avatar_url: cur.avatar_url });
   } else {
     addBubble('user', val, true, tempId, true);
+    updateCharMood(cur.id); // track user activity for mood
     // Save user message to DB
     await supabaseClient.from('messages').insert({
       sender: myUsername, receiver: String(cur.id), content: val, is_read: true
@@ -1955,7 +1979,7 @@ async function callAiRoleplay() {
     : recentSlice;
 
   const history = historyMsgs.map(m => ({ role: m.role, content: m.content }));
-  const sysPrompt = SYS.replace('{{NAME}}', cur.name).replace('{{PERSONA}}', cur.persona || '');
+  const sysPrompt = SYS.replace('{{NAME}}', cur.name).replace('{{PERSONA}}', cur.persona || '') + getMoodPromptLine(cur.id);
   const messagesPayload = [{ role: 'system', content: sysPrompt }, ...history];
 
   try {
@@ -2029,6 +2053,9 @@ async function callAiRoleplay() {
     isTypingActive = false;
 
     cur.msgs.push({ id: replyId, role: 'assistant', content: reply });
+    aiUnread[String(cur.id)] = true; // mark as unread for chat list glow
+    updateCharMood(cur.id);          // update mood on every AI reply
+    triggerHaptic([15, 60, 15]);     // soft double-pulse: new message arrived
 
     // Save AI reply to DB
     await supabaseClient.from('messages').insert({
@@ -2417,6 +2444,42 @@ async function showSpyLogs(userA, userB) {
   } catch(e) {
     msgsContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Error loading logs.</div>`;
   }
+}
+
+// ========== MOOD SYSTEM ==========
+const MOOD_KEY = 'pvt_char_moods';
+
+function getMoodData() {
+  try { return JSON.parse(localStorage.getItem(MOOD_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function updateCharMood(charId) {
+  const data = getMoodData();
+  const now = Date.now();
+  const existing = data[String(charId)] || { lastChat: 0, msgCount: 0 };
+  data[String(charId)] = { lastChat: now, msgCount: (existing.msgCount || 0) + 1 };
+  localStorage.setItem(MOOD_KEY, JSON.stringify(data));
+}
+
+function getCharMood(charId) {
+  const data = getMoodData();
+  const info = data[String(charId)];
+  if (!info || !info.lastChat) return 'cold';
+  const hoursSince = (Date.now() - info.lastChat) / 3600000;
+  if (hoursSince > 10) return 'cold';
+  if (info.msgCount >= 25 && hoursSince < 3) return 'obsessed';
+  return 'warm';
+}
+
+function getMoodPromptLine(charId) {
+  const mood = getCharMood(charId);
+  if (mood === 'obsessed') {
+    return `\n\nYOUR CURRENT EMOTIONAL STATE: You and this person have been talking intensely and often. You feel a magnetic, almost addictive pull toward them. Your energy is heightened — warm, possessive, completely present.`;
+  }
+  if (mood === 'warm') {
+    return `\n\nYOUR CURRENT EMOTIONAL STATE: You've spoken recently and feel comfortable, open, and naturally close. There's a settled warmth in how you carry yourself around this person right now.`;
+  }
+  return `\n\nYOUR CURRENT EMOTIONAL STATE: It's been a while since you've connected. You feel a little distant and guarded — not cold, just quietly held back, waiting to see if they're really here.`;
 }
 
 // ========== HAPTIC & PARTICLE FX HELPERS ==========
