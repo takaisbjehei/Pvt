@@ -888,7 +888,7 @@ textarea::placeholder { color: var(--text3); }
   #desktopEmpty {
     grid-column: 2;
     grid-row: 1;
-    display: flex !important;
+    display: none;
     align-items: center;
     justify-content: center;
     height: 100%;
@@ -1678,6 +1678,11 @@ async function initApp() {
   renderChatsList();
   loadProfileScreen();
 
+  if (isDesktop()) {
+    const empty = document.getElementById('desktopEmpty');
+    if (empty) empty.style.display = 'flex';
+  }
+
   // Global realtime: listen for incoming human DMs and AI replies
   globalSub = supabaseClient.channel('global-inbox-' + myUsername)
     .on('postgres_changes', {
@@ -1859,7 +1864,7 @@ function navBack(fallbackTab) {
       document.getElementById(id)?.classList.remove('active');
     });
     const empty = document.getElementById('desktopEmpty');
-    if (empty) empty.style.display = '';
+    if (empty) empty.style.display = 'flex';
     return;
   }
   if (history.length > 1) history.back();
