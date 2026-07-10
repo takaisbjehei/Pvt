@@ -25,6 +25,8 @@ try {
   console.error('Failed to parse .env file:', e.message);
 }
 
+const pushHandler = require('./api/push');
+
 const server = http.createServer((req, res) => {
   // CORS Headers for API compatibility
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -37,23 +39,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Route API requests
-  if (req.url === '/api/chat' && req.method === 'POST') {
+  const runHandler = (handler) => {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
-      try {
-        req.body = JSON.parse(body);
-      } catch (e) {
-        req.body = {};
-      }
-
-      // Vercel mock response formatting
+      try { req.body = JSON.parse(body); } catch (e) { req.body = {}; }
       res.json = (data) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(data));
       };
-
       res.status = (code) => {
         res.statusCode = code;
         return {
@@ -64,13 +58,21 @@ const server = http.createServer((req, res) => {
           end: () => res.end()
         };
       };
-
-      chatHandler(req, res).catch(err => {
+      handler(req, res).catch(err => {
         console.error('Serverless execution error:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       });
     });
+  };
+
+  // Route API requests
+  if (req.url === '/api/chat' && req.method === 'POST') {
+    runHandler(chatHandler);
+    return;
+  }
+  if (req.url === '/api/push' && req.method === 'POST') {
+    runHandler(pushHandler);
     return;
   }
 
