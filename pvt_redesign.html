@@ -1203,6 +1203,9 @@ textarea::placeholder { color: var(--text3); }
     <button class="draw-trigger-btn" onclick="triggerDrawPrompt()" title="Generate AI Image" style="background:none; border:none; padding:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--accent);">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
     </button>
+    <button class="search-toggle-btn" id="searchToggleBtn" onclick="toggleWebSearch()" title="Toggle Web Search" style="background:none; border:none; padding:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text2); transition:var(--transition);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    </button>
     <button class="send-btn" id="sendBtn" onclick="sendMsg()" disabled>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
@@ -2680,6 +2683,22 @@ function triggerDrawPrompt() {
   }
 }
 
+let webSearchEnabled = false;
+function toggleWebSearch() {
+  webSearchEnabled = !webSearchEnabled;
+  const btn = document.getElementById('searchToggleBtn');
+  if (btn) {
+    if (webSearchEnabled) {
+      btn.style.color = 'var(--accent-cyan)';
+      btn.style.filter = 'drop-shadow(0 0 6px rgba(0,245,212,0.4))';
+    } else {
+      btn.style.color = 'var(--text2)';
+      btn.style.filter = 'none';
+    }
+  }
+  triggerHaptic([10]);
+}
+
 function zoomChatImage(src) {
   const overlay = document.getElementById('imageZoomOverlay');
   const img = document.getElementById('imageZoomSrc');
@@ -2720,11 +2739,51 @@ async function openAvatarGenModal() {
 async function callAiRoleplay() {
   loading = true;
 
+  const allMsgs = cur.msgs;
+  const lastUserMsg = allMsgs.slice(-1)[0];
+  const query = lastUserMsg && lastUserMsg.role === 'user' ? lastUserMsg.content : '';
+
+  let searchContext = '';
+  if (webSearchEnabled && query && !query.startsWith('/draw') && !query.startsWith('/image')) {
+    try {
+      const typingBubble = document.getElementById('typingBubble');
+      if (typingBubble) {
+        const dots = typingBubble.querySelector('.typing-dots');
+        if (dots) dots.style.display = 'none';
+        const statusTxt = document.createElement('div');
+        statusTxt.id = 'searchStatusTxt';
+        statusTxt.style.fontSize = '12px';
+        statusTxt.style.color = 'var(--text2)';
+        statusTxt.style.fontStyle = 'italic';
+        statusTxt.innerHTML = '🔍 Searching the web...';
+        typingBubble.querySelector('.bubble-ai').appendChild(statusTxt);
+      }
+      
+      const searchRes = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        if (searchData.results && searchData.results.length > 0) {
+          searchContext = "\n\n[Live Web Search Context]:\n";
+          searchData.results.forEach((r, idx) => {
+            searchContext += `${idx + 1}. Title: ${r.title}\n   Link: ${r.link}\n   Info: ${r.snippet}\n`;
+          });
+          searchContext += "\nInstruction: You have access to real-time information from the live internet web search above. Use it to answer the user's message accurately. Cite links if appropriate.\n";
+        }
+      }
+      
+      const statusTxt = document.getElementById('searchStatusTxt');
+      if (statusTxt) statusTxt.remove();
+      const dots = typingBubble ? typingBubble.querySelector('.typing-dots') : null;
+      if (dots) dots.style.display = 'flex';
+    } catch (err) {
+      console.error("Web search failed:", err);
+    }
+  }
+
   // ── Smart Memory ──────────────────────────────────────────────────────────
   // Always pin the opener (first AI message = cur.msgs[0]) so the character
   // never forgets who she is, then append the last 30 messages.
   // This keeps the character consistent even in 200+ message conversations.
-  const allMsgs = cur.msgs;
   const pinnedOpener = (allMsgs.length > 0 && allMsgs[0].role === 'assistant') ? allMsgs[0] : null;
   const recentSlice = allMsgs.slice(-30);
   // Deduplicate — if opener is already inside the recent window, don't double it
@@ -2733,7 +2792,7 @@ async function callAiRoleplay() {
     : recentSlice;
 
   const history = historyMsgs.map(m => ({ role: m.role, content: m.content }));
-  const sysPrompt = SYS.replace('{{NAME}}', cur.name).replace('{{PERSONA}}', cur.persona || '') + getMoodPromptLine(cur.id);
+  const sysPrompt = SYS.replace('{{NAME}}', cur.name).replace('{{PERSONA}}', cur.persona || '') + getMoodPromptLine(cur.id) + searchContext;
   const messagesPayload = [{ role: 'system', content: sysPrompt }, ...history];
 
   try {
