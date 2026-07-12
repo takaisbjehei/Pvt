@@ -1247,6 +1247,13 @@ textarea::placeholder { color: var(--text3); }
         <textarea class="f-ta" id="cPersona" placeholder="Who are they? What's the situation? Be detailed."></textarea>
       </div>
       <div>
+        <div class="f-label" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+          <span>Appearance Description</span>
+          <span style="font-size:11px; color:var(--accent-cyan); cursor:pointer; font-weight:700;" onclick="autoGenerateAppearance()">✨ Auto-Generate</span>
+        </div>
+        <input class="f-input" id="cAppearance" placeholder="e.g. A 20-year-old female with long black hair, green eyes" type="text"/>
+      </div>
+      <div>
         <div class="f-label">AI Model</div>
         <select class="f-select" id="cModel">
           <option value="llama-3.3-70b-versatile">🔥 Llama 3.3 70B — Best for roleplay</option>
@@ -2514,10 +2521,19 @@ function addBubble(role, content, animate=true, msgId=null, isRead=false) {
     const avNode = cur && cur.avatar_url
       ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
       : (cur && cur.type === 'human' ? IC_USER_SM : IC_BOT_SM);
+    
+    const hasAction = content.includes('*');
+    const drawBtnHtml = (hasAction && cur && cur.type !== 'human')
+      ? `<button class="draw-scene-btn" onclick="drawMessageScene(\`${esc(content).replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" title="Visualize Scene" style="margin-top:8px; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; color:var(--accent-cyan); cursor:pointer; font-weight:700; transition:var(--transition);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Visualize Scene</button>`
+      : '';
+
     msgRow.innerHTML = `
       <div class="ai-inner">
         <div class="sm-av">${avNode}</div>
-        <div class="bubble-ai">${contentHtml}</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start;">
+          <div class="bubble-ai">${contentHtml}</div>
+          ${drawBtnHtml}
+        </div>
       </div>`;
   }
 
@@ -2608,8 +2624,19 @@ async function sendMsg() {
     showTypingBubble();
     
     try {
+      let appearance = '';
+      if (cur && cur.persona) {
+        const appMatch = cur.persona.match(/\[Appearance:\s*([\s\S]*?)\]/);
+        if (appMatch) appearance = appMatch[1].trim();
+      }
+      
+      let finalPrompt = promptText;
+      if (appearance && !promptText.toLowerCase().includes(appearance.split(',')[0].toLowerCase().trim())) {
+        finalPrompt = `${appearance}, ${promptText}`;
+      }
+
       const seed = Math.floor(Math.random() * 1000000);
-      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=512&height=512&nologo=true&seed=${seed}`;
+      const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=512&height=512&nologo=true&seed=${seed}`;
       
       const imgObj = new Image();
       imgObj.onload = async () => {
@@ -2677,6 +2704,63 @@ function triggerDrawPrompt() {
   const promptText = prompt("Describe the image you want the AI to draw:\n(e.g., 'cyberpunk city, rainy night, neon signs')");
   if (promptText) {
     const input = document.getElementById('msgInput');
+    input.value = `/draw ${promptText}`;
+    document.getElementById('sendBtn').disabled = false;
+    sendMsg();
+  }
+}
+
+async function autoGenerateAppearance() {
+  const name = document.getElementById('cName').value.trim();
+  const avatarUrl = document.getElementById('cAvatarUrl').value.trim();
+  const persona = document.getElementById('cPersona').value.trim();
+  
+  if (!avatarUrl && !persona) {
+    alert("Please upload an avatar image or enter a persona description first.");
+    return;
+  }
+  
+  const triggerEl = document.querySelector('[onclick="autoGenerateAppearance()"]');
+  const originalLabel = triggerEl.innerHTML;
+  triggerEl.innerHTML = "⏳ Generating...";
+  
+  try {
+    const res = await fetch('/api/describe-avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar_url: avatarUrl, name, persona })
+    });
+    if (!res.ok) throw new Error("Failed to extract appearance description.");
+    const data = await res.json();
+    if (data.description) {
+      document.getElementById('cAppearance').value = data.description;
+    }
+  } catch (err) {
+    alert("Error auto-generating appearance: " + err.message);
+  } finally {
+    triggerEl.innerHTML = originalLabel;
+  }
+}
+
+async function drawMessageScene(content) {
+  // Extract actions inside asterisks
+  const matches = [...content.matchAll(/\*(.*?)\*/g)];
+  let actionText = matches.map(m => m[1]).join(', ').trim();
+  if (!actionText) actionText = content.replace(/<[^>]*>/g, '').trim(); // fallback to clean text
+  
+  let appearance = '';
+  if (cur && cur.persona) {
+    const appMatch = cur.persona.match(/\[Appearance:\s*([\s\S]*?)\]/);
+    if (appMatch) appearance = appMatch[1].trim();
+  }
+  
+  let promptText = actionText;
+  if (appearance) {
+    promptText = `${appearance}, ${actionText}`;
+  }
+  
+  const input = document.getElementById('msgInput');
+  if (input) {
     input.value = `/draw ${promptText}`;
     document.getElementById('sendBtn').disabled = false;
     sendMsg();
@@ -2990,6 +3074,7 @@ function goCreate() {
   document.getElementById('cAvatarPreview').innerHTML = IC_BOT;
   document.getElementById('cOpener').value = '';
   document.getElementById('cPersona').value = '';
+  document.getElementById('cAppearance').value = '';
   document.getElementById('cModel').value = 'llama-3.3-70b-versatile';
   document.getElementById('cIsPrivate').checked = false;
   document.getElementById('cDeleteBtn').style.display = 'none';
@@ -3005,7 +3090,17 @@ function editCurrentChar() {
     ? `<img src="${esc(cur.avatar_url)}" style="width:100%;height:100%;object-fit:cover"/>`
     : IC_BOT;
   document.getElementById('cOpener').value = cur.opener || '';
-  document.getElementById('cPersona').value = cur.persona || '';
+  
+  const personaRaw = cur.persona || '';
+  const appMatch = personaRaw.match(/\[Appearance:\s*([\s\S]*?)\]/);
+  if (appMatch) {
+    document.getElementById('cAppearance').value = appMatch[1].trim();
+    document.getElementById('cPersona').value = personaRaw.replace(/\[Appearance:\s*([\s\S]*?)\]/, '').trim();
+  } else {
+    document.getElementById('cAppearance').value = '';
+    document.getElementById('cPersona').value = personaRaw;
+  }
+  
   document.getElementById('cModel').value = cur.model || 'llama-3.3-70b-versatile';
   document.getElementById('cIsPrivate').checked = cur.is_private || false;
   document.getElementById('cDeleteBtn').style.display = 'block';
@@ -3017,6 +3112,7 @@ async function createChar() {
   const avatarUrl = document.getElementById('cAvatarUrl').value.trim();
   const opener = document.getElementById('cOpener').value.trim();
   const persona = document.getElementById('cPersona').value.trim();
+  const appearance = document.getElementById('cAppearance').value.trim();
   const model = document.getElementById('cModel').value;
   const isPrivate = document.getElementById('cIsPrivate').checked;
 
@@ -3025,7 +3121,12 @@ async function createChar() {
     return;
   }
 
-  const payload = { name, avatar_url: avatarUrl, opener, persona, model, created_by: myUsername, is_private: isPrivate };
+  let personaWithApp = persona;
+  if (appearance) {
+    personaWithApp = `${persona}\n\n[Appearance: ${appearance}]`;
+  }
+
+  const payload = { name, avatar_url: avatarUrl, opener, persona: personaWithApp, model, created_by: myUsername, is_private: isPrivate };
   try {
     if (editingId) {
       await supabaseClient.from('characters').update(payload).eq('id', editingId);
